@@ -101,6 +101,7 @@ button,
   width: 8px;
   height: 8px;
   background-color: var(--accent);
+  will-change: transform;
 }
 
 .cursor-ring {
@@ -109,6 +110,7 @@ button,
   border: 1px solid var(--white);
   opacity: 0.4;
   transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s, opacity 0.3s;
+  will-change: transform;
 }
 
 
@@ -187,11 +189,14 @@ button,
 }
 
 .preloader-monogram {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(60px, 12vw, 140px);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(60px, 10vw, 130px);
   color: var(--accent);
-  z-index: 10;
-  letter-spacing: 0.05em;
+  z-index: 11;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-style: normal;
 }
 
 .preloader-bar {
@@ -272,6 +277,8 @@ button,
 section {
   position: relative;
   overflow: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 100vh;
 }
 
 
@@ -289,7 +296,10 @@ section {
 
 /* ---- CORNER GRIDS (lightweight) ---- */
 .corner-grid-lite {
-  filter: drop-shadow(0 0 6px rgba(200, 241, 53, 0.3));
+  filter: drop-shadow(0 0 4px rgba(200, 241, 53, 0.2));
+  pointer-events: none;
+  /* Prevents unwanted hover events */
+  will-change: opacity;
 }
 
 /* ---- MARQUEE (Change 04 — fixed seamless loop) ---- */
@@ -521,6 +531,7 @@ section {
   transition: opacity 0.6s ease;
   mask-image: radial-gradient(circle 350px at var(--torch-x-bg, 50%) var(--torch-y-bg, 50%), black 0%, transparent 80%);
   -webkit-mask-image: radial-gradient(circle 350px at var(--torch-x-bg, 50%) var(--torch-y-bg, 50%), black 0%, transparent 80%);
+  will-change: mask-image, -webkit-mask-image;
 }
 
 .project-card-v2:hover .project-torch-reveal {
@@ -1080,7 +1091,7 @@ button,
   max-width: 1100px;
   height: 70vh;
   flex-shrink: 0;
-  margin: 0 5vw;
+  margin: 0 2vw;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1418,5 +1429,52 @@ button,
   .skill-pill {
     padding: 6px 12px !important;
     font-size: 10px !important;
+  }
+}
+
+/* ---- SCROLL TO TOP BUTTON ---- */
+.scroll-to-top {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  cursor: none;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.scroll-to-top.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.scroll-to-top:hover {
+  background: var(--accent);
+  color: var(--black);
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 15px 40px rgba(200, 241, 53, 0.3);
+}
+
+@media (max-width: 768px) {
+  .scroll-to-top {
+    bottom: 30px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
   }
 }

@@ -14,7 +14,7 @@ import netflixSnap from './assets/websitesnaps/Netflix.png';
 import algovizSnap from './assets/websitesnaps/algorithmviz.png';
 import face1 from './assets/FOOTERIMG/face1.png';
 import face2 from './assets/FOOTERIMG/face2.png';
-import resumeFile from './assets/RESUME/Rakshit Sharma Pdf.pdf';
+import resumeFile from './assets/RESUME/Rakshit Resume.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -268,6 +268,13 @@ const splitChars = (text) =>
 
 const marqueeText = TECH_MARQUEE.map(t => t).join(' · ') + ' · ';
 
+// Tubes random color helper - Hoisted to top level
+const randomColorsArr = (count) => {
+  return new Array(count)
+    .fill(0)
+    .map(() => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+};
+
 // ─── App Component ───────────────────────────────
 export default function App() {
   const appRef = useRef(null);
@@ -280,9 +287,12 @@ export default function App() {
   const projectCardRefs = useRef([]);
   const projectSectionRef = useRef(null);
   const projectHorizontalRef = useRef(null);
+  const tubesAppRef = useRef(null); // Ref to store Tubes instance
+  const tubesInited = useRef(false); // Flag to prevent double init
 
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [counter, setCounter] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // ─── Memoized Splits (Prevents animation disruption on re-render) ───
   const heroFirstChars = useMemo(() => splitChars('RAKSHIT'), []);
@@ -343,10 +353,31 @@ export default function App() {
   // Navigate to section (with flash)
   const scrollToSection = useCallback((id) => {
     triggerFlash();
-    if (lenisRef.current) {
+    const target = document.querySelector(`#${id}`);
+    if (lenisRef.current && target) {
       lenisRef.current.scrollTo(`#${id}`, { duration: 1.6 });
     }
   }, [triggerFlash]);
+
+  // Combined throttle helper
+  const throttle = (func, limit) => {
+    let lastFunc;
+    let lastRan;
+    return function (...args) {
+      if (!lastRan) {
+        func.apply(this, args);
+        lastRan = Date.now();
+      } else {
+        clearTimeout(lastFunc);
+        lastFunc = setTimeout(function () {
+          if (Date.now() - lastRan >= limit) {
+            func.apply(this, args);
+            lastRan = Date.now();
+          }
+        }, limit - (Date.now() - lastRan));
+      }
+    };
+  };
 
   // ─── Master useEffect: Lenis + Cursor ──
   useEffect(() => {
@@ -418,58 +449,55 @@ export default function App() {
       });
     });
 
-    // ─── Corner LeetCode Torch (throttled with rAF) ──
+    // Scroll to Top visibility
+    ScrollTrigger.create({
+      start: 'top -800',
+      onUpdate: (self) => {
+        setShowScrollTop(self.scroll() > 800);
+      }
+    });
+    // ─── Corner LeetCode Torch (Throttled update) ──
     const heroEl = heroRef.current;
     const corners = cornerGridRefs.current.filter(Boolean);
     let heroMoveRaf = null;
 
-    const onHeroMove = (e) => {
-      if (heroMoveRaf) return; // throttle to 1 per frame
-      heroMoveRaf = requestAnimationFrame(() => {
-        heroMoveRaf = null;
-        if (!heroEl || corners.length === 0) return;
-        const rect = heroEl.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const w = rect.width, h = rect.height;
-        const distances = [
-          Math.hypot(x, y),
-          Math.hypot(w - x, y),
-          Math.hypot(x, h - y),
-          Math.hypot(w - x, h - y),
-        ];
-        const maxDist = 500;
-        corners.forEach((corner, i) => {
-          if (!corner) return;
-          const proximity = Math.max(0, 1 - distances[i] / maxDist);
-          corner.style.opacity = String(proximity * 0.85);
-        });
+    const updateTorch = (e) => {
+      if (!heroEl || corners.length === 0) return;
+      const rect = heroEl.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const w = rect.width, h = rect.height;
+      const distances = [
+        Math.hypot(x, y),
+        Math.hypot(w - x, y),
+        Math.hypot(x, h - y),
+        Math.hypot(w - x, h - y),
+      ];
+      const maxDist = 500;
+      corners.forEach((corner, i) => {
+        if (!corner) return;
+        const proximity = Math.max(0, 1 - distances[i] / maxDist);
+        corner.style.opacity = String(proximity * 0.85);
       });
     };
+
+    const throttledHeroMove = throttle(updateTorch, 16); // ~60fps but steady
 
     const onHeroLeave = () => {
       corners.forEach(c => { if (c) gsap.to(c, { opacity: 0, duration: 0.5 }); });
     };
 
     if (heroEl) {
-      heroEl.addEventListener('mousemove', onHeroMove);
+      heroEl.addEventListener('mousemove', throttledHeroMove);
       heroEl.addEventListener('mouseleave', onHeroLeave);
     }
 
-
-    // Tubes Cursor Integration (Using Global Bridge)
-    let tubesApp;
+    // Tubes Cursor Integration (Optimized for One-Time Init + Cleanup)
     const initTubesEffect = () => {
-      const targetPr = Math.min(window.devicePixelRatio || 1, 2);
-      try {
-        Object.defineProperty(window, 'devicePixelRatio', {
-          get: () => targetPr,
-          configurable: true
-        });
-      } catch (e) {
-        console.warn('Could not hijack window.devicePixelRatio:', e);
-      }
+      if (tubesInited.current) return;
+      tubesInited.current = true;
 
+      const targetPr = Math.min(window.devicePixelRatio || 1, 2);
       const start = () => {
         const TubesCursorManager = window.TubesCursor;
         const canvas = document.getElementById('hero-tubes-canvas');
@@ -481,7 +509,7 @@ export default function App() {
 
         console.log('Initializing Tubes Cursor...');
         try {
-          tubesApp = TubesCursorManager(canvas, {
+          const instance = TubesCursorManager(canvas, {
             tubes: {
               colors: ["#35f14e", "#51b52a", "#267356"],
               lights: {
@@ -490,9 +518,10 @@ export default function App() {
               }
             }
           });
+          tubesAppRef.current = instance;
 
-          if (tubesApp && tubesApp.three) {
-            const { renderer } = tubesApp.three;
+          if (instance && instance.three) {
+            const { renderer } = instance.three;
             const getSafeSize = () => {
               const w = Math.min(canvas.clientWidth || window.innerWidth, 4096);
               const h = Math.min(canvas.clientHeight || window.innerHeight, 4096);
@@ -505,45 +534,27 @@ export default function App() {
             renderer.setPixelRatio = (val) => originalSetPixelRatio(targetPr);
             renderer.setPixelRatio(targetPr);
 
-            try {
-              Object.defineProperty(renderer, 'pixelRatio', {
-                get: () => targetPr,
-                set: () => { },
-                configurable: true
-              });
-            } catch (e) { }
-
             renderer.setSize = (width, height, updateStyle) => {
               const { w, h, pw, ph } = getSafeSize();
-              if (tubesApp && tubesApp.bloomPass && typeof tubesApp.bloomPass.setSize === 'function') {
+              if (instance.bloomPass && typeof instance.bloomPass.setSize === 'function') {
                 try {
-                  // Ensure bloomPass is fully initialized before setting size
-                  if (tubesApp.bloomPass.renderTargetsHorizontal && tubesApp.bloomPass.renderTargetsHorizontal.length > 0) {
-                    tubesApp.bloomPass.setSize(pw, ph);
+                  if (instance.bloomPass.renderTargetsHorizontal?.length > 0) {
+                    instance.bloomPass.setSize(pw, ph);
                   }
-                } catch (e) { console.warn("Bloom resize deferred", e); }
+                } catch (e) { }
               }
               return originalSetSize(w, h, updateStyle);
             };
 
-            renderer.getDrawingBufferSize = (target) => {
-              const { pw, ph } = getSafeSize();
-              if (target && typeof target.set === 'function') {
-                target.set(pw, ph);
-                return target;
-              }
-              return { width: pw, height: ph };
-            };
-
-            tubesApp.three.resize();
+            instance.three.resize();
           }
 
           const handleGlobalClick = () => {
-            if (tubesApp && tubesApp.tubes) {
+            if (tubesAppRef.current?.tubes) {
               const colors = randomColorsArr(3);
               const lightsColors = randomColorsArr(4);
-              tubesApp.tubes.setColors(colors);
-              tubesApp.tubes.setLightsColors(lightsColors);
+              tubesAppRef.current.tubes.setColors(colors);
+              tubesAppRef.current.tubes.setLightsColors(lightsColors);
             }
           };
 
@@ -557,27 +568,41 @@ export default function App() {
       return start();
     };
 
-    const cleanupClick = initTubesEffect();
+    const cleanupInit = initTubesEffect();
 
-    // Toggle tubes cursor visibility after About section
+    // Toggle tubes cursor visibility after About section (with existence checks)
     ScrollTrigger.create({
       trigger: '#experience',
       start: 'top bottom',
-      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none' }),
-      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none' }),
+      onEnter: () => {
+        const targets = document.querySelectorAll('.tubes-canvas-wrapper');
+        if (targets.length > 0) {
+          gsap.to(targets, { opacity: 0, duration: 0.5, pointerEvents: 'none' });
+        }
+      },
+      onLeaveBack: () => {
+        const targets = document.querySelectorAll('.tubes-canvas-wrapper');
+        if (targets.length > 0) {
+          gsap.to(targets, { opacity: 1, duration: 0.8, pointerEvents: 'none' });
+        }
+      },
     });
 
     return () => {
-      // Cleanup
       if (heroEl) {
-        heroEl.removeEventListener('mousemove', onHeroMove);
+        heroEl.removeEventListener('mousemove', throttledHeroMove);
         heroEl.removeEventListener('mouseleave', onHeroLeave);
       }
       if (heroMoveRaf) cancelAnimationFrame(heroMoveRaf);
-      if (cleanupClick) cleanupClick();
-      if (tubesApp) {
-        if (typeof tubesApp.dispose === 'function') tubesApp.dispose();
-        else if (typeof tubesApp.destroy === 'function') tubesApp.destroy();
+      if (cleanupInit && typeof cleanupInit === 'function') cleanupInit();
+
+      if (tubesAppRef.current) {
+        try {
+          if (typeof tubesAppRef.current.dispose === 'function') tubesAppRef.current.dispose();
+          else if (typeof tubesAppRef.current.destroy === 'function') tubesAppRef.current.destroy();
+        } catch (e) { }
+        tubesAppRef.current = null;
+        tubesInited.current = false;
       }
 
       ScrollTrigger.getAll().forEach((t) => t.kill());
@@ -592,12 +617,7 @@ export default function App() {
     };
   }, []);
 
-  // Tubes random color helper
-  const randomColorsArr = (count) => {
-    return new Array(count)
-      .fill(0)
-      .map(() => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
-  };
+  // Tubes random color helper moved to top level
 
   // ─── Preloader Timeline ─────────────────────────
   useEffect(() => {
@@ -620,7 +640,14 @@ export default function App() {
         ease: 'circ.inOut',
         onUpdate: () => setCounter(Math.floor(c.val)),
       })
-        .to('.preloader-monogram', { scale: 8, opacity: 0, duration: 0.6, ease: 'power3.in' }, '+=0.15')
+        .to('.preloader-monogram', {
+          scale: 1.1,
+          letterSpacing: '0.4em',
+          opacity: 0,
+          filter: 'blur(12px)',
+          duration: 0.8,
+          ease: 'power2.inOut'
+        }, '+=0.15')
         .to('.preloader-top', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '-=0.3')
         .to('.preloader-bottom', { yPercent: 100, duration: 0.8, ease: 'power4.inOut' }, '<');
     }, appRef);
@@ -656,18 +683,24 @@ export default function App() {
       delay: 3.2,
     });
 
-    // === STATEMENT — word-by-word opacity scrub ===
+    // === STATEMENT — word-by-word opacity scrub (Consolidated into one ScrollTrigger) ===
     const stWords = document.querySelectorAll('.statement-word');
-    stWords.forEach((w, i) => {
-      gsap.fromTo(w,
+    if (stWords.length > 0) {
+      gsap.fromTo(stWords,
         { opacity: 0.06, color: '#555550' },
         {
           opacity: 1,
-          color: i === stWords.length - 1 ? '#C8F135' : '#F0EDE6',
-          scrollTrigger: { trigger: w, start: 'top 80%', end: 'top 40%', scrub: true },
+          color: (i) => i === stWords.length - 1 ? '#C8F135' : '#F0EDE6',
+          stagger: 0.5,
+          scrollTrigger: {
+            trigger: '#statement',
+            start: 'top 80%',
+            end: 'bottom 60%',
+            scrub: true,
+          }
         }
       );
-    });
+    }
 
     gsap.fromTo('.statement-sub',
       { opacity: 0 },
@@ -745,9 +778,9 @@ export default function App() {
       scrollTrigger: {
         trigger: projectSectionRef.current,
         pin: true,
-        scrub: 1,
+        scrub: 0.5, // Faster, more tactile scrub
         start: 'top top',
-        end: () => `+=${projectHorizontalRef.current.scrollWidth}`,
+        end: () => `+=${projectHorizontalRef.current.scrollWidth * 0.8}`, // Reduced scroll distance for faster speed
         anticipatePin: 1,
       }
     }) : null;
@@ -876,43 +909,7 @@ export default function App() {
       });
     });
 
-    // === CONTACT — flash + reveal ===
-    gsap.fromTo('.contact-flash',
-      { opacity: 0 },
-      {
-        opacity: 0.15,
-        duration: 0.15,
-        scrollTrigger: { trigger: '#contact', start: 'top 60%' },
-        yoyo: true,
-        repeat: 1,
-      }
-    );
-
-    document.querySelectorAll('.contact-word').forEach((w, i) => {
-      gsap.fromTo(w,
-        { clipPath: 'inset(100% 0 0 0)', opacity: 0 },
-        {
-          clipPath: 'inset(0% 0 0 0)',
-          opacity: 1,
-          scrollTrigger: { trigger: '#contact', start: 'top 55%' },
-          delay: i * 0.15,
-          duration: 0.8,
-          ease: 'power4.out',
-        }
-      );
-    });
-
-    gsap.fromTo('.contact-link',
-      { y: 20, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        stagger: 0.08,
-        scrollTrigger: { trigger: '#contact', start: 'top 40%' },
-        duration: 0.6,
-        ease: 'power2.out',
-      }
-    );
+    // Contact animations removed (Missing elements)
 
     // ─── Certification Hover Effects ──────────────────────────
     document.querySelectorAll('.cert-card-v2').forEach(card => {
@@ -1031,22 +1028,68 @@ export default function App() {
             zIndex: 2
           }}>
             {/* Left Side */}
-            <div style={{ textAlign: window.innerWidth < 1024 ? 'center' : 'left' }}>
-              <div className="hero-label font-mono" style={{ fontSize: 12, color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 24 }}>
+            <div style={{
+              textAlign: window.innerWidth < 1024 ? 'center' : 'left',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: window.innerWidth < 1024 ? 'center' : 'flex-start',
+              width: '100%'
+            }}>
+              <div className="hero-label font-mono" style={{
+                fontSize: window.innerWidth < 768 ? 10 : 12,
+                color: 'var(--accent)',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                marginBottom: 24,
+                width: '100%'
+              }}>
                 Available for work · 2026
               </div>
-              <h1 className="hero-first font-display" style={{ fontSize: 'clamp(80px, 14vw, 200px)', lineHeight: 0.85, color: 'var(--white)', letterSpacing: '-0.01em' }}>
+              <h1 className="hero-first font-display" style={{
+                fontSize: 'clamp(48px, 15vw, 200px)',
+                lineHeight: 0.85,
+                color: 'var(--white)',
+                letterSpacing: '-0.01em',
+                display: 'flex',
+                justifyContent: window.innerWidth < 1024 ? 'center' : 'flex-start',
+                flexWrap: 'nowrap',
+                width: '100%'
+              }}>
                 {heroFirstChars}
               </h1>
-              <h1 className="hero-last font-display" style={{ fontSize: 'clamp(80px, 14vw, 200px)', lineHeight: 0.85, color: 'var(--accent)', letterSpacing: '-0.01em' }}>
+              <h1 className="hero-last font-display" style={{
+                fontSize: 'clamp(48px, 15vw, 200px)',
+                lineHeight: 0.85,
+                color: 'var(--accent)',
+                letterSpacing: '-0.01em',
+                display: 'flex',
+                justifyContent: window.innerWidth < 1024 ? 'center' : 'flex-start',
+                flexWrap: 'nowrap',
+                width: '100%'
+              }}>
                 {heroLastChars}
               </h1>
-              <div style={{ marginTop: 32 }}>
-                {/* Change 03 — Updated subtitle */}
-                <p className="hero-sub font-body" style={{ fontSize: 'clamp(16px, 1.4vw, 22px)', fontWeight: 700, color: 'rgba(240,237,230,0.7)' }}>
+              <div style={{
+                marginTop: 32,
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: window.innerWidth < 1024 ? 'center' : 'flex-start',
+              }}>
+                <p className="hero-sub font-body" style={{
+                  fontSize: 'clamp(14px, 1.4vw, 22px)',
+                  fontWeight: 700,
+                  color: 'rgba(240,237,230,0.7)'
+                }}>
                   Frontend Developer
                 </p>
-                <p className="hero-sub font-mono" style={{ fontSize: 12, color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 8 }}>
+                <p className="hero-sub font-mono" style={{
+                  fontSize: 10,
+                  color: 'var(--accent)',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  marginTop: 8
+                }}>
                   React · UI/UX · Full Stack
                 </p>
               </div>
@@ -1062,7 +1105,7 @@ export default function App() {
               gap: 16
             }}>
               {/* RS watermark */}
-              <div className="text-outline-accent font-display" style={{ fontSize: 'clamp(100px, 12vw, 200px)', lineHeight: 0.85, opacity: 0.15 }}>
+              <div className="text-outline-accent font-body" style={{ fontSize: 'clamp(80px, 10vw, 160px)', fontWeight: 800, opacity: 0.1, letterSpacing: '0.1em' }}>
                 RS
               </div>
               {/* Stat pills — Change 03: removed TGPA */}
@@ -1687,7 +1730,7 @@ export default function App() {
                 <a href="#coding-arena" className="nav-circle" style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(200, 241, 53, 0.3)', textDecoration: 'none' }}>
                   <Zap size={18} color="black" fill="black" />
                 </a>
-                <a href={resumeFile} download="Rakshit_Sharma_Resume.pdf" style={{ color: 'inherit' }}><FileText size={16} /></a>
+                <a href={resumeFile} download="Rakshit_Resume.png" style={{ color: 'inherit' }}><FileText size={16} /></a>
               </div>
             </div>
 
@@ -1695,6 +1738,14 @@ export default function App() {
               <span>MADE IN INDIA</span>
             </div>
           </div>
+
+          {/* Scroll to Top Button */}
+          <button
+            className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
+            onClick={() => lenisRef.current?.scrollTo('#hero', { duration: 2 })}
+          >
+            <Zap size={20} fill="currentColor" />
+          </button>
         </section >
 
         {/* Tubes Cursor Canvas — Moved to bottom to ensure it overlays while staying out of the way of layout */}
