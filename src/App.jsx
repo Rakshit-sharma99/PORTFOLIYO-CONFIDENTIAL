@@ -5,6 +5,7 @@ import Lenis from '@studio-freight/lenis';
 import { scrambleText } from './utils/scrambleText';
 import GallerySection from './components/GallerySection';
 import BackgroundMusic from './components/BackgroundMusic';
+import MatrixEntry from './components/MatrixEntry';
 import { Github, Linkedin, Mail, Phone, ExternalLink, Zap, Home, User, Code, Trophy, Briefcase, Play, FileText, Sun } from 'lucide-react';
 import metafurySnap from './assets/websitesnaps/metafury.png';
 import desitarzanSnap from './assets/websitesnaps/Desitarzan.png';
@@ -15,6 +16,10 @@ import algovizSnap from './assets/websitesnaps/algorithmviz.png';
 import face1 from './assets/FOOTERIMG/face1.png';
 import face2 from './assets/FOOTERIMG/face2.png';
 import resumeFile from './assets/RESUME/Rakshit Resume.png';
+import cert1 from './assets/Certificates/Build generative ai.pdf';
+import cert2 from './assets/Certificates/ChatGPT-4 Prompt Engineering ChatGPT, Generative AI & LL.pdf';
+import cert3 from './assets/Certificates/Computational Theory Language Principle & Finite Automata Theor.pdf';
+import cert4 from './assets/Certificates/Master Generative AI &.pdf';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,10 +78,10 @@ const EXPERIENCE = [
 
 const PROJECTS = [
   { num: '01', title: 'AI Styler', sub: 'Full-Stack AI Project', when: 'Jan 2026', stack: ['React', 'Node', 'MongoDB', 'Multer', 'Sharp'], color: '#C8F135', url: '#', snap: aistylerSnap },
-  { num: '02', title: 'Netflix Clone', sub: 'Streaming Platform UI', when: 'Nov 2025', stack: ['React', 'Firebase', 'TMDB API'], color: '#E50914', url: '#', snap: netflixSnap },
+  { num: '02', title: 'Netflix Clone', sub: 'Streaming Platform UI', when: 'Nov 2025', stack: ['React', 'Firebase', 'TMDB API'], color: '#E50914', url: 'https://github.com/Rakshit-sharma99/Netflix-Clone', snap: netflixSnap },
   { num: '03', title: 'Meta Fury', sub: 'Energy Drink Brand Site', when: 'Jan 2026', stack: ['React', 'Node.js', 'MongoDB'], color: '#FF8C00', url: 'https://metafury.fit', snap: metafurySnap },
   { num: '04', title: 'Dental Clinic', sub: 'Appointment System', when: 'Jul 2025', stack: ['React', 'Node.js', 'Express', 'Atlas'], color: '#4D9FFF', url: 'https://dentalclinic.com', snap: dentalclinicSnap },
-  { num: '05', title: 'Algorithm Viz', sub: 'Pathfinding Visualizer', when: 'Feb 2026', stack: ['Java', 'Swing', 'BFS', 'DFS', 'A*'], color: '#A855F7', url: '#', snap: algovizSnap },
+  { num: '05', title: 'Algorithm Viz', sub: 'Pathfinding Visualizer', when: 'Feb 2026', stack: ['Java', 'Swing', 'BFS', 'DFS', 'A*'], color: '#A855F7', url: 'https://github.com/Rakshit-sharma99/ADVANCE-PATH-FINDING-VISUALIZER', snap: algovizSnap },
   { num: '06', title: 'Desi Tarzan', sub: 'E-Commerce Store', when: 'Jun 2025', stack: ['Wix', 'Custom CSS'], color: '#22C55E', url: 'https://desitarzan.com', snap: desitarzanSnap },
 ];
 
@@ -97,10 +102,10 @@ const STATS = [
 const CERTS_DRIVE_LINK = 'https://drive.google.com/drive/folders/YOUR_FOLDER_ID';
 
 const CERTS_DATA = [
-  { issuer: 'Infosys Springboard', title: 'Build Generative AI Apps and Solutions', date: 'AUG 2025', color: '#C8F135', credentialId: 'ISB-GAI-2025-0847' },
-  { issuer: 'NPTEL', title: 'Privacy and Security in Online social media', date: 'APR 2024', color: '#4D9FFF', credentialId: 'NPTEL-PSSM-2024-1023' },
-  { issuer: 'Coursera', title: 'The Bits and Bytes of Computer Networking', date: 'SEP 2024', color: '#FF8C00', credentialId: 'COUR-CN-2024-5591' },
-  { issuer: 'Coursera', title: 'Software Engineering: Implementation and Testing', date: 'OCT 2024', color: '#A855F7', credentialId: 'COUR-SE-2024-7732' },
+  { issuer: 'Infosys Springboard', title: 'Build Generative AI Apps & Solutions', date: 'AUG 2025', color: '#C8F135', credentialId: 'ISB-GAI-2025-0847', pdf: cert1 },
+  { issuer: 'Udemy', title: 'ChatGPT-4 Prompt Engineering', date: 'APR 2024', color: '#4D9FFF', credentialId: 'NPTEL-PSSM-2024-1023', pdf: cert2 },
+  { issuer: 'NPTEL', title: 'Computational Theory Language Principle', date: 'SEP 2024', color: '#FF8C00', credentialId: 'COUR-CN-2024-5591', pdf: cert3 },
+  { issuer: 'Infosys Springboard', title: 'Master Generative AI', date: 'OCT 2024', color: '#A855F7', credentialId: 'COUR-SE-2024-7732', pdf: cert4 },
 ];
 
 const TECH_MARQUEE = ['REACT', 'NODE.JS', 'JAVA', 'EXPRESS', 'MONGODB', 'MYSQL', 'REST API', 'GSAP', 'FIGMA', 'GIT', 'DSA', 'MERN'];
@@ -146,7 +151,7 @@ const CODING_PROFILES = [
   }
 ];
 
-const CodingFlipCard = ({ platform, logo, color, stats, about, index, url }) => {
+const CodingFlipCard = ({ platform, logo, color, stats, about, url }) => {
   return (
     <div className="flip-card" style={{ '--glow-color': color }}>
       <div className="flip-card-inner">
@@ -284,15 +289,18 @@ export default function App() {
   const heroRef = useRef(null);
   const cornerGridRefs = useRef([]);
   const flashRef = useRef(null);
-  const projectCardRefs = useRef([]);
+
   const projectSectionRef = useRef(null);
   const projectHorizontalRef = useRef(null);
   const tubesAppRef = useRef(null); // Ref to store Tubes instance
   const tubesInited = useRef(false); // Flag to prevent double init
 
+  const [matrixDone, setMatrixDone] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [counter, setCounter] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+
 
   // ─── Memoized Splits (Prevents animation disruption on re-render) ───
   const heroFirstChars = useMemo(() => splitChars('RAKSHIT'), []);
@@ -308,7 +316,7 @@ export default function App() {
       </span>
     )), []);
   const [activeSection, setActiveSection] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
+
 
   // ─── Generate corner LeetCode grid boxes (memoized, reduced count) ───
   const cornerBoxes = useMemo(() =>
@@ -321,22 +329,7 @@ export default function App() {
 
   // Cursor helpers removed
 
-  // ─── Magnetic effect helper ─────────────────────
-  const btnRefs = useRef([]);
-  const handleMagneticMove = useCallback((e, idx) => {
-    const btn = btnRefs.current[idx];
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    const dx = e.clientX - rect.left - rect.width / 2;
-    const dy = e.clientY - rect.top - rect.height / 2;
-    gsap.to(btn, { x: dx * 0.35, y: dy * 0.35, ease: 'power2.out', duration: 0.3 });
-  }, []);
 
-  const handleMagneticLeave = useCallback((idx) => {
-    const btn = btnRefs.current[idx];
-    if (!btn) return;
-    gsap.to(btn, { x: 0, y: 0, ease: 'elastic.out(1, 0.3)', duration: 0.7 });
-  }, []);
 
   // ─── Page transition flash (Change 5A) ─────────
   const triggerFlash = useCallback(() => {
@@ -419,13 +412,11 @@ export default function App() {
 
     // Hover states for interactive elements
     const handleMouseEnter = () => {
-      setIsHovering(true);
       gsap.to(cursorRing, { scale: 2.5, backgroundColor: 'rgba(200, 241, 53, 0.1)', borderColor: 'var(--accent)', duration: 0.3 });
       gsap.to(cursorDot, { scale: 0, duration: 0.3 });
     };
 
     const handleMouseLeave = () => {
-      setIsHovering(false);
       gsap.to(cursorRing, { scale: 1, backgroundColor: 'transparent', borderColor: 'var(--white)', opacity: 0.4, duration: 0.3 });
       gsap.to(cursorDot, { scale: 1, duration: 0.3 });
     };
@@ -531,7 +522,7 @@ export default function App() {
             const originalSetSize = renderer.setSize.bind(renderer);
             const originalSetPixelRatio = renderer.setPixelRatio.bind(renderer);
 
-            renderer.setPixelRatio = (val) => originalSetPixelRatio(targetPr);
+            renderer.setPixelRatio = () => originalSetPixelRatio(targetPr);
             renderer.setPixelRatio(targetPr);
 
             renderer.setSize = (width, height, updateStyle) => {
@@ -541,7 +532,7 @@ export default function App() {
                   if (instance.bloomPass.renderTargetsHorizontal?.length > 0) {
                     instance.bloomPass.setSize(pw, ph);
                   }
-                } catch (e) { }
+                } catch (e) { console.error('Error in bloomPass setSize:', e); }
               }
               return originalSetSize(w, h, updateStyle);
             };
@@ -570,22 +561,26 @@ export default function App() {
 
     const cleanupInit = initTubesEffect();
 
-    // Toggle tubes cursor visibility after About section (with existence checks)
+    // Toggle tubes cursor visibility
     ScrollTrigger.create({
       trigger: '#experience',
       start: 'top bottom',
-      onEnter: () => {
-        const targets = document.querySelectorAll('.tubes-canvas-wrapper');
-        if (targets.length > 0) {
-          gsap.to(targets, { opacity: 0, duration: 0.5, pointerEvents: 'none' });
-        }
-      },
-      onLeaveBack: () => {
-        const targets = document.querySelectorAll('.tubes-canvas-wrapper');
-        if (targets.length > 0) {
-          gsap.to(targets, { opacity: 1, duration: 0.8, pointerEvents: 'none' });
-        }
-      },
+      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
+      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
+    });
+
+    ScrollTrigger.create({
+      trigger: '#coding-arena',
+      start: 'top bottom',
+      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
+      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
+    });
+
+    ScrollTrigger.create({
+      trigger: '#certifications',
+      start: 'top bottom',
+      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
+      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
     });
 
     return () => {
@@ -600,7 +595,7 @@ export default function App() {
         try {
           if (typeof tubesAppRef.current.dispose === 'function') tubesAppRef.current.dispose();
           else if (typeof tubesAppRef.current.destroy === 'function') tubesAppRef.current.destroy();
-        } catch (e) { }
+        } catch (e) { console.error('Error destroying tubes instance:', e); }
         tubesAppRef.current = null;
         tubesInited.current = false;
       }
@@ -621,6 +616,7 @@ export default function App() {
 
   // ─── Preloader Timeline ─────────────────────────
   useEffect(() => {
+    if (!matrixDone) return;
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         onComplete: () => {
@@ -640,20 +636,22 @@ export default function App() {
         ease: 'circ.inOut',
         onUpdate: () => setCounter(Math.floor(c.val)),
       })
-        .to('.preloader-monogram', {
-          scale: 1.1,
-          letterSpacing: '0.4em',
-          opacity: 0,
-          filter: 'blur(12px)',
-          duration: 0.8,
-          ease: 'power2.inOut'
-        }, '+=0.15')
-        .to('.preloader-top', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '-=0.3')
-        .to('.preloader-bottom', { yPercent: 100, duration: 0.8, ease: 'power4.inOut' }, '<');
+      .to('.preloader-monogram', {
+        scale: 1.1,
+        letterSpacing: '0.4em',
+        opacity: 0,
+        filter: 'blur(12px)',
+        duration: 0.8,
+        ease: 'power2.inOut'
+      }, "+=0.15")
+      .to('.preloader-bar', { opacity: 0, duration: 0.3 }, "<")
+      .to('.preloader-counter', { opacity: 0, duration: 0.3 }, '<')
+      .to('.preloader-top', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '-=0.3')
+      .to('.preloader-bottom', { yPercent: 100, duration: 0.8, ease: 'power4.inOut' }, '<');
     }, appRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [matrixDone]);
 
   const animationsInitiated = useRef(false);
   // ─── Scene Animations ──────────────────────────
@@ -770,7 +768,7 @@ export default function App() {
     });
 
     // === PROJECTS — Cinematic Horizontal Story Layout ===
-    const projectCount = PROJECTS.length;
+
 
     const projectScroll = window.innerWidth >= 1024 ? gsap.to(projectHorizontalRef.current, {
       x: () => -(projectHorizontalRef.current.scrollWidth - window.innerWidth),
@@ -786,7 +784,7 @@ export default function App() {
     }) : null;
 
     // Individual project card effects (parallax + highlight + entrance)
-    document.querySelectorAll('.project-card-v2').forEach((card, i) => {
+    document.querySelectorAll('.project-card-v2').forEach((card) => {
       const content = card.querySelector('.project-content-v2');
 
       // ONE TIMELINE TO RULE THEM ALL (Fixes scroll-up glitch + ensures perfect smoothness)
@@ -941,6 +939,8 @@ export default function App() {
       <BackgroundMusic />
       {/* Scroll Progress — Outside app wrapper for fixed position stability */}
       <div ref={progressRef} className="scroll-progress" />
+
+      {!matrixDone && <MatrixEntry onEnter={() => setMatrixDone(true)} />}
 
       <div ref={appRef} className="app">
         {/* Custom Cursor */}
@@ -1111,7 +1111,7 @@ export default function App() {
               {/* Stat pills — Change 03: removed TGPA */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
                 {[
-                  '300+ Problems Solved',
+                  '300+ DSA Problems Solved',
                   '3 Live Projects',
                 ].map((t, i) => (
                   <div
@@ -1242,8 +1242,8 @@ export default function App() {
 
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             {/* Change 5F — clip wipe title */}
-            <h2 className="exp-title clip-wipe-title font-display" data-scramble="EXPERIENCE" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
-              EXPERIENCE
+            <h2 className="exp-title clip-wipe-title font-display" data-scramble="RECENT PAID PROJECTS" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
+              RECENT PAID PROJECTS
             </h2>
 
             <div style={{ position: 'relative', paddingLeft: 40 }}>
@@ -1472,7 +1472,7 @@ export default function App() {
               padding: '0 20px'
             }}>
               {CODING_PROFILES.map((profile, i) => (
-                <CodingFlipCard key={i} {...profile} index={i} />
+                <CodingFlipCard key={i} {...profile} url={profile.url} />
               ))}
             </div>
           </div>
@@ -1497,14 +1497,17 @@ export default function App() {
             margin: '0 auto'
           }}>
             {CERTS_DATA.map((cert, i) => (
-              <div key={i} className="cert-card-premium" style={{
+              <a key={i} href={cert.pdf} download target="_blank" rel="noopener noreferrer" className="cert-card-premium" style={{
                 position: 'relative',
+                display: 'block',
+                textDecoration: 'none',
                 background: '#0a0a0a',
                 borderRadius: '24px',
                 padding: '40px',
                 border: '1px solid rgba(255,255,255,0.03)',
                 overflow: 'hidden',
-                transition: 'transform 0.4s ease, border-color 0.4s ease'
+                transition: 'transform 0.4s ease, border-color 0.4s ease',
+                cursor: 'none'
               }}>
                 {/* Vertical Accent Line */}
                 <div style={{
@@ -1578,7 +1581,7 @@ export default function App() {
                     <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em' }}>VERIFIED</span>
                   </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
 
@@ -1739,14 +1742,15 @@ export default function App() {
             </div>
           </div>
 
-          {/* Scroll to Top Button */}
-          <button
-            className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
-            onClick={() => lenisRef.current?.scrollTo('#hero', { duration: 2 })}
-          >
-            <Zap size={20} fill="currentColor" />
-          </button>
         </section >
+
+        {/* Scroll to Top Button */}
+        <button
+          className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
+          onClick={() => lenisRef.current?.scrollTo('#hero', { duration: 2 })}
+        >
+          <Zap size={20} fill="currentColor" />
+        </button>
 
         {/* Tubes Cursor Canvas — Moved to bottom to ensure it overlays while staying out of the way of layout */}
         <div className="tubes-canvas-wrapper" >

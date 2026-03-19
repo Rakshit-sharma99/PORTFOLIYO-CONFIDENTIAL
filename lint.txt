@@ -1,0 +1,22 @@
+﻿
+> cinematic-portfolio@0.0.0 lint
+> eslint .
+
+
+R:\Portfoliyo website\cinematic-portfolio\src\App.jsx
+  154:64  error  'index' is defined but never used                                                                    no-unused-vars
+  292:9   error  'projectCardRefs' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u      no-unused-vars
+  303:9   error  'handleEnter' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u          no-unused-vars
+  304:11  error  'ctx' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                  no-unused-vars
+  343:10  error  'isHovering' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u           no-unused-vars
+  358:9   error  'handleMagneticMove' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u   no-unused-vars
+  367:9   error  'handleMagneticLeave' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+R:\Portfoliyo website\cinematic-portfolio\src\components\MatrixEntry.jsx
+  163:41  warning  The ref value 'robotRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'robotRef.current' to a variable inside the effect, and use that variable in the cleanup function        react-hooks/exhaustive-deps
+  163:61  warning  The ref value 'leftArmRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'leftArmRef.current' to a variable inside the effect, and use that variable in the cleanup function    react-hooks/exhaustive-deps
+  163:82  warning  The ref value 'rightArmRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'rightArmRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+  163:99  warning  The ref value 'legsRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'legsRef.current' to a variable inside the effect, and use that variable in the cleanup function          react-hooks/exhaustive-deps
+
+Γ£û 11 problems (7 errors, 4 warnings)
+
