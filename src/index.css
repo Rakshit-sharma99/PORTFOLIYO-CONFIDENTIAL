@@ -84,37 +84,6 @@ button,
   background: transparent;
 }
 
-/* ---- CUSTOM CURSOR ---- */
-.cursor-dot,
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 10000;
-  transform: translate(-50%, -50%);
-  will-change: transform;
-}
-
-.cursor-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--accent);
-  will-change: transform;
-}
-
-.cursor-ring {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--white);
-  opacity: 0.4;
-  transition: width 0.3s, height 0.3s, background-color 0.3s, border-color 0.3s, opacity 0.3s;
-  will-change: transform;
-}
-
-
-
 /* ---- SCROLL PROGRESS ---- */
 .scroll-progress {
   position: fixed;
@@ -277,8 +246,6 @@ button,
 section {
   position: relative;
   overflow: hidden;
-  content-visibility: auto;
-  contain-intrinsic-size: 100vh;
 }
 
 
@@ -508,14 +475,13 @@ section {
 
 /* ---- PROJECT CARD V2 (HORIZONTAL STORY) ---- */
 .project-card-v2 {
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
+  transition: border-color 0.4s;
   border: 1px solid rgba(255, 255, 255, 0.05);
   background: #000 !important;
   /* Forces solid background to prevent ghosting */
 }
 
 .project-card-v2:hover {
-  transform: scale(1.01);
   border-color: rgba(200, 241, 53, 0.1);
 }
 
@@ -747,7 +713,7 @@ section {
 
 /* ---- SECTION TITLE CLIP WIPE (Change 5F) ---- */
 .clip-wipe-title {
-  clip-path: inset(0 100% 0 0);
+  clip-path: inset(0 0 0 0);
 }
 
 /* ---- THE GRAND FINALE / MEGA FOOTER ---- */
@@ -925,11 +891,6 @@ button,
   html,
   body {
     cursor: auto !important;
-  }
-
-  .cursor-dot,
-  .cursor-ring {
-    display: none !important;
   }
 
   .nav-fixed {
@@ -1293,9 +1254,7 @@ button,
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(18, 18, 18, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: var(--white);
@@ -1439,9 +1398,7 @@ button,
   right: 40px;
   width: 50px;
   height: 50px;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(18, 18, 18, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: var(--accent);

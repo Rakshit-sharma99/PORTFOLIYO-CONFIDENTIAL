@@ -6,15 +6,17 @@ import { scrambleText } from './utils/scrambleText';
 import GallerySection from './components/GallerySection';
 import BackgroundMusic from './components/BackgroundMusic';
 import MatrixEntry from './components/MatrixEntry';
+import { initGlobalFX, initReveals, initOdometers, isFinePointer, prefersReducedMotion, getScrollVelocity } from './fx/fx';
+import { useViewport, SplitReveal, RollText, VMarquee, SpinBadge, FollowImage, ImageTrail, Odometer, Scribble, LiveClock, HangingBadge, Starfield } from './fx/components';
 import { Github, Linkedin, Mail, Phone, ExternalLink, Zap, Home, User, Code, Trophy, Briefcase, Play, FileText, Sun } from 'lucide-react';
-import metafurySnap from './assets/websitesnaps/metafury.png';
-import desitarzanSnap from './assets/websitesnaps/Desitarzan.png';
-import dentalclinicSnap from './assets/websitesnaps/dentalclinic.png';
-import aistylerSnap from './assets/websitesnaps/AiStyler.png';
-import netflixSnap from './assets/websitesnaps/Netflix.png';
-import algovizSnap from './assets/websitesnaps/algorithmviz.png';
-import face1 from './assets/FOOTERIMG/face1.png';
-import face2 from './assets/FOOTERIMG/face2.png';
+import metafurySnap from './assets/websitesnaps/metafury.webp';
+import desitarzanSnap from './assets/websitesnaps/Desitarzan.webp';
+import dentalclinicSnap from './assets/websitesnaps/dentalclinic.webp';
+import aistylerSnap from './assets/websitesnaps/AiStyler.webp';
+import netflixSnap from './assets/websitesnaps/Netflix.webp';
+import algovizSnap from './assets/websitesnaps/algorithmviz.webp';
+import face1 from './assets/FOOTERIMG/face1.webp';
+import face2 from './assets/FOOTERIMG/face2.webp';
 import resumeFile from './assets/RESUME/Rakshit Resume.png';
 import cert1 from './assets/Certificates/Build generative ai.pdf';
 import cert2 from './assets/Certificates/ChatGPT-4 Prompt Engineering ChatGPT, Generative AI & LL.pdf';
@@ -110,7 +112,26 @@ const CERTS_DATA = [
 
 const TECH_MARQUEE = ['REACT', 'NODE.JS', 'JAVA', 'EXPRESS', 'MONGODB', 'MYSQL', 'REST API', 'GSAP', 'FIGMA', 'GIT', 'DSA', 'MERN'];
 
-const SECTIONS = ['hero', 'statement', 'about', 'experience', 'projects', 'gallery', 'skills', 'coding-arena', 'certifications'];
+const SECTIONS = ['hero', 'statement', 'about', 'experience', 'process', 'projects', 'gallery', 'skills', 'coding-arena', 'certifications'];
+const SECTION_LABELS = ['INTRO', 'MANIFESTO', 'ABOUT', 'CLIENT WORK', 'PROCESS', 'PROJECTS', 'STACK', 'SKILLS', 'ARENA', 'CREDENTIALS'];
+
+const STORY_LINES = [
+  'I craft full-stack experiences.',
+  'MERN is my weapon.',
+  'Java is my logic.',
+  'Clean UI is my obsession.',
+  '3 live client projects shipped.',
+  '300+ DSA problems solved.',
+  'Ranked #1 at university.',
+  'Always building.',
+];
+
+const PROCESS = [
+  { num: '01', title: 'Discover', desc: 'We dig into your goals, your audience and what success looks like — then lock a clear scope and timeline.' },
+  { num: '02', title: 'Design', desc: 'Wireframes and a distinct visual direction in Figma, so you see the product before a single line of code.' },
+  { num: '03', title: 'Develop', desc: 'React + Node builds with smooth motion, clean architecture and performance budgets baked in from day one.' },
+  { num: '04', title: 'Launch', desc: 'Deployment, SEO basics, analytics and a proper hand-over — plus support after the site goes live.' },
+];
 
 const CODING_PROFILES = [
   {
@@ -197,31 +218,6 @@ const CodingFlipCard = ({ platform, logo, color, stats, about, url }) => {
 };
 
 
-// LeetCode corner grid colors — more vibrant, weighted toward empty
-const LC_ACTIVITY_COLORS = [
-  'transparent', 'transparent', 'transparent', 'transparent',  // 40% empty
-  '#1a3a1a', '#1a3a1a',                                       // 15% very low
-  '#1e5c2e', '#1e5c2e',                                       // 15% low
-  '#2ea84a', '#2ea84a',                                        // 15% medium
-  '#3dcd5a',                                                   // 10% high
-  '#C8F135',                                                   // 5% max (accent)
-];
-
-// Corner positions for LeetCode grids
-const CORNER_POSITIONS = [
-  { top: 0, left: 0 },
-  { top: 0, right: 0 },
-  { bottom: 0, left: 0 },
-  { bottom: 0, right: 0 },
-];
-
-const CORNER_MASKS = [
-  'radial-gradient(ellipse at top left, black 0%, transparent 75%)',
-  'radial-gradient(ellipse at top right, black 0%, transparent 75%)',
-  'radial-gradient(ellipse at bottom left, black 0%, transparent 75%)',
-  'radial-gradient(ellipse at bottom right, black 0%, transparent 75%)',
-];
-
 // ─── Performance Optimized Sub-Components — Prevents App from re-rendering every second ───
 const FooterClock = () => {
   const [time, setTime] = useState(new Date());
@@ -297,8 +293,11 @@ export default function App() {
 
   const [matrixDone, setMatrixDone] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
-  const [counter, setCounter] = useState(0);
+  const counterRef = useRef(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [hoverSnap, setHoverSnap] = useState(null);
+  const [hoverActive, setHoverActive] = useState(false);
+  const vw = useViewport();
 
 
 
@@ -318,39 +317,33 @@ export default function App() {
   const [activeSection, setActiveSection] = useState(0);
 
 
-  // ─── Generate corner LeetCode grid boxes (memoized, reduced count) ───
-  const cornerBoxes = useMemo(() =>
-    Array.from({ length: 4 }, () =>
-      Array.from({ length: 10 * 8 }, () =>
-        LC_ACTIVITY_COLORS[Math.floor(Math.random() * LC_ACTIVITY_COLORS.length)]
-      )
-    ), []
-  );
-
   // Cursor helpers removed
 
 
 
-  // ─── Page transition flash (Change 5A) ─────────
-  const triggerFlash = useCallback(() => {
-    if (flashRef.current) {
-      gsap.fromTo(flashRef.current, { opacity: 0 }, {
-        keyframes: [
-          { opacity: 0.15, duration: 0.1 },
-          { opacity: 0, duration: 0.2 },
-        ],
-      });
-    }
-  }, []);
-
-  // Navigate to section (with flash)
+  // ─── Curtain page transition ─────────
+  const curtainBusy = useRef(false);
   const scrollToSection = useCallback((id) => {
-    triggerFlash();
     const target = document.querySelector(`#${id}`);
-    if (lenisRef.current && target) {
-      lenisRef.current.scrollTo(`#${id}`, { duration: 1.6 });
-    }
-  }, [triggerFlash]);
+    const lenis = lenisRef.current;
+    if (!lenis || !target || curtainBusy.current) return;
+    if (prefersReducedMotion()) { lenis.scrollTo(target, { immediate: true }); return; }
+
+    curtainBusy.current = true;
+    const cols = flashRef.current?.querySelectorAll('.page-curtain-col');
+    const label = document.querySelector('.page-curtain-label');
+    const idx = SECTIONS.indexOf(id);
+    if (label) label.textContent = idx >= 0 ? SECTION_LABELS[idx] : id.toUpperCase();
+
+    gsap.timeline({ onComplete: () => { curtainBusy.current = false; } })
+      .set(cols, { transformOrigin: 'bottom' })
+      .to(cols, { scaleY: 1, duration: 0.55, ease: 'expo.inOut', stagger: { each: 0.05, from: 'center' } })
+      .fromTo(label, { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, duration: 0.35, ease: 'power3.out' }, '-=0.2')
+      .add(() => { lenis.scrollTo(target, { immediate: true, force: true }); ScrollTrigger.update(); })
+      .to(label, { opacity: 0, yPercent: -30, duration: 0.3, ease: 'power3.in' }, '+=0.15')
+      .set(cols, { transformOrigin: 'top' })
+      .to(cols, { scaleY: 0, duration: 0.6, ease: 'expo.inOut', stagger: { each: 0.05, from: 'edges' } }, '-=0.1');
+  }, []);
 
   // Combined throttle helper
   const throttle = (func, limit) => {
@@ -375,57 +368,24 @@ export default function App() {
   // ─── Master useEffect: Lenis + Cursor ──
   useEffect(() => {
     // Lenis — smoother, silkier scroll
+    // Lenis — silky lerp-based scroll, fully synced with ScrollTrigger
     const lenis = new Lenis({
-      duration: 1.4,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothTouch: true,
-      touchMultiplier: 1.5,
+      lerp: 0.1,
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1.4,
     });
     lenisRef.current = lenis;
+    if (import.meta.env.DEV) window.__lenis = lenis;
+    lenis.stop(); // locked until the intro finishes
 
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    lenis.on('scroll', ScrollTrigger.update);
+    const lenisTick = (time) => lenis.raf(time * 1000);
+    gsap.ticker.add(lenisTick);
     gsap.ticker.lagSmoothing(0);
 
-    // Cursor logic removed
-
-    // ─── Custom Cursor Logic ───
-    const cursorDot = document.querySelector('.cursor-dot');
-    const cursorRing = document.querySelector('.cursor-ring');
-
-    const onMouseMove = (e) => {
-      const { clientX, clientY } = e;
-      gsap.to(cursorDot, { x: clientX, y: clientY, duration: 0.1, ease: 'power2.out' });
-      gsap.to(cursorRing, { x: clientX, y: clientY, duration: 0.4, ease: 'power3.out' });
-    };
-
-    const onMouseDown = () => {
-      gsap.to([cursorDot, cursorRing], { scale: 0.7, duration: 0.2 });
-    };
-
-    const onMouseUp = () => {
-      gsap.to([cursorDot, cursorRing], { scale: 1, duration: 0.2 });
-    };
-
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mouseup', onMouseUp);
-
-    // Hover states for interactive elements
-    const handleMouseEnter = () => {
-      gsap.to(cursorRing, { scale: 2.5, backgroundColor: 'rgba(200, 241, 53, 0.1)', borderColor: 'var(--accent)', duration: 0.3 });
-      gsap.to(cursorDot, { scale: 0, duration: 0.3 });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(cursorRing, { scale: 1, backgroundColor: 'transparent', borderColor: 'var(--white)', opacity: 0.4, duration: 0.3 });
-      gsap.to(cursorDot, { scale: 1, duration: 0.3 });
-    };
-
-    const interactives = document.querySelectorAll('a, button, .nav-dot, .nav-monogram, .magnetic-btn, .skill-pill, .gallery-pill');
-    interactives.forEach(el => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
-    });
+    // Global FX layer (cursor, magnetic, tilt, velocity skew/marquees)
+    const fxCleanup = initGlobalFX({ lenis });
 
     // Active section tracker removed from here, moving Scroll Progress to initSceneAnimations for accurate calculation
 
@@ -435,6 +395,7 @@ export default function App() {
         trigger: `#${id}`,
         start: 'top center',
         end: 'bottom center',
+        refreshPriority: -1,
         onEnter: () => setActiveSection(i),
         onEnterBack: () => setActiveSection(i),
       });
@@ -484,11 +445,16 @@ export default function App() {
     }
 
     // Tubes Cursor Integration (Optimized for One-Time Init + Cleanup)
+    let onTubesResize = null;
+    let tubesRO = null;
     const initTubesEffect = () => {
       if (tubesInited.current) return;
       tubesInited.current = true;
 
-      const targetPr = Math.min(window.devicePixelRatio || 1, 2);
+      // The library forces pixelRatio 2 (4x pixels on a 1x screen). The bloom output is
+      // soft glow, so rendering at 0.75x and letting CSS upscale is visually identical
+      // and ~7x cheaper than the default.
+      const targetPr = 0.75;
       const start = () => {
         const TubesCursorManager = window.TubesCursor;
         const canvas = document.getElementById('hero-tubes-canvas');
@@ -501,10 +467,11 @@ export default function App() {
         console.log('Initializing Tubes Cursor...');
         try {
           const instance = TubesCursorManager(canvas, {
+            bloom: { threshold: 0.1, strength: 0.55, radius: 0.3 },
             tubes: {
               colors: ["#35f14e", "#51b52a", "#267356"],
               lights: {
-                intensity: 150,
+                intensity: 55,
                 colors: ["#C8F135", "#ff7403", "#ff12f3", "#60aed5"]
               }
             }
@@ -513,9 +480,25 @@ export default function App() {
 
           if (instance && instance.three) {
             const { renderer } = instance.three;
+            instance.three.minPixelRatio = targetPr;
+            instance.three.maxPixelRatio = targetPr;
+
+            // Draw the bloom pipeline every other frame (30fps). The canvas keeps
+            // showing its last frame in between, and the tubes are slow, soft motion.
+            const origRender = instance.three.render;
+            if (typeof origRender === 'function') {
+              let flip = false;
+              instance.three.render = (...args) => {
+                flip = !flip;
+                return flip ? origRender.apply(instance.three, args) : undefined;
+              };
+            }
+            // Always size from the live viewport — canvas.clientWidth gets frozen
+            // to the inline px style three.js writes, which made the canvas stick
+            // at its first size (the visible "black box" after a window resize).
             const getSafeSize = () => {
-              const w = Math.min(canvas.clientWidth || window.innerWidth, 4096);
-              const h = Math.min(canvas.clientHeight || window.innerHeight, 4096);
+              const w = Math.min(window.innerWidth, 4096);
+              const h = Math.min(window.innerHeight, 4096);
               return { w, h, pw: Math.floor(w * targetPr), ph: Math.floor(h * targetPr) };
             };
 
@@ -525,7 +508,7 @@ export default function App() {
             renderer.setPixelRatio = () => originalSetPixelRatio(targetPr);
             renderer.setPixelRatio(targetPr);
 
-            renderer.setSize = (width, height, updateStyle) => {
+            renderer.setSize = () => {
               const { w, h, pw, ph } = getSafeSize();
               if (instance.bloomPass && typeof instance.bloomPass.setSize === 'function') {
                 try {
@@ -534,10 +517,30 @@ export default function App() {
                   }
                 } catch (e) { console.error('Error in bloomPass setSize:', e); }
               }
-              return originalSetSize(w, h, updateStyle);
+              const res = originalSetSize(w, h, false);
+              canvas.style.width = '100%';
+              canvas.style.height = '100%';
+              const composer = instance.three.composer || instance.composer;
+              if (composer && typeof composer.setSize === 'function') {
+                try { composer.setSize(w, h); } catch { /* ignore */ }
+              }
+              return res;
             };
 
             instance.three.resize();
+
+            let resizeT = 0;
+            onTubesResize = () => {
+              clearTimeout(resizeT);
+              resizeT = setTimeout(() => {
+                try { instance.three.resize(); } catch { renderer.setSize(window.innerWidth, window.innerHeight); }
+              }, 120);
+            };
+            window.addEventListener('resize', onTubesResize);
+            if ('ResizeObserver' in window && canvas.parentElement) {
+              tubesRO = new ResizeObserver(() => onTubesResize && onTubesResize());
+              tubesRO.observe(canvas.parentElement);
+            }
           }
 
           const handleGlobalClick = () => {
@@ -561,26 +564,28 @@ export default function App() {
 
     const cleanupInit = initTubesEffect();
 
-    // Toggle tubes cursor visibility
-    ScrollTrigger.create({
-      trigger: '#experience',
-      start: 'top bottom',
-      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
-      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
-    });
-
-    ScrollTrigger.create({
-      trigger: '#coding-arena',
-      start: 'top bottom',
-      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
-      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
-    });
-
-    ScrollTrigger.create({
-      trigger: '#certifications',
-      start: 'top bottom',
-      onEnter: () => gsap.to('.tubes-canvas-wrapper', { opacity: 0, duration: 0.5, pointerEvents: 'none', overwrite: 'auto' }),
-      onLeaveBack: () => gsap.to('.tubes-canvas-wrapper', { opacity: 1, duration: 0.8, pointerEvents: 'none', overwrite: 'auto' }),
+    // Tubes only live in the hero. When neither is on screen the
+    // wrapper goes display:none — the library's IntersectionObserver then pauses
+    // its render loop entirely (opacity:0 alone kept the WebGL bloom running).
+    const tubesZones = new Set(['hero']);
+    const tubesWrap = document.querySelector('.tubes-canvas-wrapper');
+    const syncTubes = () => {
+      if (!tubesWrap) return;
+      if (tubesZones.size) {
+        tubesWrap.style.display = 'block';
+        gsap.to(tubesWrap, { opacity: 1, duration: 0.8, overwrite: 'auto' });
+      } else {
+        gsap.to(tubesWrap, { opacity: 0, duration: 0.4, overwrite: 'auto', onComplete: () => { if (!tubesZones.size) tubesWrap.style.display = 'none'; } });
+      }
+    };
+    ['hero'].forEach((id) => {
+      ScrollTrigger.create({
+        trigger: `#${id}`,
+        start: 'top bottom',
+        end: 'bottom top',
+        refreshPriority: -1,
+        onToggle: (self) => { if (self.isActive) tubesZones.add(id); else tubesZones.delete(id); syncTubes(); },
+      });
     });
 
     return () => {
@@ -590,6 +595,8 @@ export default function App() {
       }
       if (heroMoveRaf) cancelAnimationFrame(heroMoveRaf);
       if (cleanupInit && typeof cleanupInit === 'function') cleanupInit();
+      if (onTubesResize) window.removeEventListener('resize', onTubesResize);
+      tubesRO?.disconnect();
 
       if (tubesAppRef.current) {
         try {
@@ -601,53 +608,42 @@ export default function App() {
       }
 
       ScrollTrigger.getAll().forEach((t) => t.kill());
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mouseup', onMouseUp);
-      interactives.forEach(el => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
-      });
+      fxCleanup();
+      gsap.ticker.remove(lenisTick);
       lenis.destroy();
     };
   }, []);
 
   // Tubes random color helper moved to top level
 
-  // ─── Preloader Timeline ─────────────────────────
+  // ─── Preloader Timeline — giant counter → fluted-glass strip exit ───
   useEffect(() => {
     if (!matrixDone) return;
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         onComplete: () => {
           setPreloaderDone(true);
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              initSceneAnimations();
-            });
-          });
+          lenisRef.current?.start();
         },
       });
 
       const c = { val: 0 };
-      tl.to(c, {
-        val: 100,
-        duration: 2,
-        ease: 'circ.inOut',
-        onUpdate: () => setCounter(Math.floor(c.val)),
-      })
-      .to('.preloader-monogram', {
-        scale: 1.1,
-        letterSpacing: '0.4em',
-        opacity: 0,
-        filter: 'blur(12px)',
-        duration: 0.8,
-        ease: 'power2.inOut'
-      }, "+=0.15")
-      .to('.preloader-bar', { opacity: 0, duration: 0.3 }, "<")
-      .to('.preloader-counter', { opacity: 0, duration: 0.3 }, '<')
-      .to('.preloader-top', { yPercent: -100, duration: 0.8, ease: 'power4.inOut' }, '-=0.3')
-      .to('.preloader-bottom', { yPercent: 100, duration: 0.8, ease: 'power4.inOut' }, '<');
+      tl.fromTo('.preloader-meta', { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.08, ease: 'expo.out' })
+        .fromTo('.preloader-count', { yPercent: 100 }, { yPercent: 0, duration: 0.9, ease: 'expo.out' }, 0)
+        .to(c, {
+          val: 100,
+          duration: 2.1,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            if (counterRef.current) counterRef.current.textContent = String(Math.floor(c.val)).padStart(3, '0');
+            gsap.set('.preloader-line-fill', { scaleX: c.val / 100 });
+          },
+        }, 0.2)
+        .to('.preloader-count', { yPercent: -105, duration: 0.7, ease: 'expo.in' }, '+=0.1')
+        .to('.preloader-meta, .preloader-line', { opacity: 0, yPercent: -40, duration: 0.5, ease: 'power3.in' }, '<')
+        // start the hero entrance underneath while the glass strips lift
+        .call(() => requestAnimationFrame(() => initSceneAnimations()))
+        .to('.preloader-strip', { yPercent: -101, duration: 1.1, ease: 'expo.inOut', stagger: { each: 0.05, from: 'center' } }, '<');
     }, appRef);
 
     return () => ctx.revert();
@@ -658,77 +654,159 @@ export default function App() {
   const initSceneAnimations = () => {
     if (animationsInitiated.current) return;
     animationsInitiated.current = true;
-    // === HERO entry sequence ===
-    const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-    heroTl
-      .fromTo('.hero-label', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 })
-      .fromTo('.hero-first .char', { y: -100, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.8 }, '-=0.3')
-      .fromTo('.hero-last .char', { y: 100, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.8, ease: 'back.out(1.4)' }, '-=0.4')
-      .fromTo('.hero-sub', { y: 20, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.6 }, '-=0.3')
-      .fromTo('.hero-stat-pill', { x: 60, opacity: 0 }, { x: 0, opacity: 1, stagger: 0.1, duration: 0.5 }, '-=0.4')
-      .fromTo('.hero-bottom', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.3');
+    const fine = isFinePointer();
 
-    // === Change 5B — Hero glitch after entry ===
-    gsap.to('.hero-first', {
+    // === HERO entry — name splits around the portrait ===
+    const heroTl = gsap.timeline({ defaults: { ease: 'expo.out' } });
+    heroTl
+      .fromTo('.hero-portrait', { yPercent: 35, opacity: 0, scale: 1.08 }, { yPercent: 0, opacity: 1, scale: 1, duration: 1.8 }, 0.1)
+      .fromTo('.hero-first .char',
+        { yPercent: 110, rotationX: -95, opacity: 0, transformOrigin: '50% 100% -40px' },
+        { yPercent: 0, rotationX: 0, opacity: 1, stagger: 0.05, duration: 1.4 }, 0.2)
+      .fromTo('.hero-last .char',
+        { yPercent: -110, rotationX: 95, opacity: 0, transformOrigin: '50% 0% -40px' },
+        { yPercent: 0, rotationX: 0, opacity: 1, stagger: { each: 0.05, from: 'end' }, duration: 1.4 }, 0.35)
+      .fromTo('.hero-label', { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9 }, 0.8)
+      .fromTo('.hero-sub', { y: 30, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 1 }, 0.9)
+      .fromTo('.hero-stat-pill', { x: 80, opacity: 0, skewX: -12 }, { x: 0, opacity: 1, skewX: 0, stagger: 0.12, duration: 1 }, 1)
+      .fromTo('.hero-hang', { y: -520 }, { y: 0, duration: 1.8, ease: 'elastic.out(1, 0.55)' }, 0.9)
+      .fromTo('.grid-lines span', { scaleY: 0 }, { scaleY: 1, duration: 1.6, stagger: 0.06, ease: 'expo.inOut', transformOrigin: 'top' }, 0)
+      .fromTo('.hero-bottom > *', { y: 30, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 1 }, 1.1);
+
+    // Occasional glitch on the back name (skew only — x is owned by the parallax)
+    gsap.to('.hero-name-back', {
       keyframes: [
-        { x: -4, duration: 0.05 },
-        { x: 4, duration: 0.05 },
-        { x: -2, duration: 0.05 },
-        { x: 2, duration: 0.05 },
-        { x: -1, duration: 0.05 },
-        { x: 0, duration: 0.05 },
+        { skewX: 10, duration: 0.05 },
+        { skewX: -10, duration: 0.05 },
+        { skewX: 4, duration: 0.05 },
+        { skewX: 0, duration: 0.05 },
       ],
-      delay: 3.2,
+      delay: 3.4,
+      repeat: -1,
+      repeatDelay: 6,
     });
 
-    // === STATEMENT — word-by-word opacity scrub (Consolidated into one ScrollTrigger) ===
-    const stWords = document.querySelectorAll('.statement-word');
-    if (stWords.length > 0) {
-      gsap.fromTo(stWords,
-        { opacity: 0.06, color: '#555550' },
-        {
-          opacity: 1,
-          color: (i) => i === stWords.length - 1 ? '#C8F135' : '#F0EDE6',
-          stagger: 0.5,
-          scrollTrigger: {
-            trigger: '#statement',
-            start: 'top 80%',
-            end: 'bottom 60%',
-            scrub: true,
-          }
-        }
-      );
+    // Hero — scroll-out: letters scatter, portrait sinks, badge flies up
+    heroTl.call(() => {
+      const heroOut = gsap.timeline({
+        scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: 0.8 },
+        defaults: { ease: 'none' },
+      });
+      heroOut
+        .to('.hero-first .char', { yPercent: (i) => -40 - i * 18, rotation: (i) => (i - 3) * 6, opacity: 0.1, stagger: 0.02 }, 0)
+        .to('.hero-last .char', { yPercent: (i) => 40 + i * 18, rotation: (i) => (i - 3) * -6, opacity: 0.1, stagger: 0.02 }, 0)
+        .to('.hero-portrait', { yPercent: 18, scale: 1.1 }, 0)
+        .to('.hero-hang', { y: -360 }, 0)
+        .to('.hero-label-wrap, .hero-intro, .hero-stats', { y: -80, opacity: 0 }, 0)
+        .to('.hero-bottom', { opacity: 0, y: 40 }, 0);
+    });
+
+    // Hero — layered mouse parallax (back name / portrait / front name)
+    if (fine) {
+      const layers = [
+        ['.hero-name-back', -28],
+        ['.hero-portrait', 14],
+        ['.hero-name-front', 46],
+        ['.grid-lines', -8],
+      ].map(([sel, amt]) => {
+        const el = document.querySelector(sel);
+        return el ? { x: gsap.quickTo(el, 'x', { duration: 1.2, ease: 'power3' }), amt } : null;
+      }).filter(Boolean);
+      heroRef.current?.addEventListener('pointermove', (e) => {
+        const nx = e.clientX / window.innerWidth - 0.5;
+        layers.forEach((l) => l.x(nx * l.amt));
+      });
     }
 
-    gsap.fromTo('.statement-sub',
-      { opacity: 0 },
-      { opacity: 1, scrollTrigger: { trigger: '#statement', start: 'center 60%' }, duration: 1.2 }
-    );
+    // === STATEMENT — pinned word reveal → zoom-through portal ===
+    const stWords = document.querySelectorAll('.statement-word');
+    const stDesktop = window.innerWidth > 1024;
+    if (stWords.length > 0) {
+      const stTl = gsap.timeline({
+        scrollTrigger: stDesktop
+          ? { trigger: '#statement', start: 'top top', end: '+=180%', pin: true, scrub: 1, anticipatePin: 1 }
+          : { trigger: '#statement', start: 'top 75%', end: 'center 40%', scrub: 1 },
+        defaults: { ease: 'none' },
+      });
+      stTl.fromTo(stWords,
+        { opacity: 0.06, color: '#555550', yPercent: 40, rotationX: -60 },
+        {
+          opacity: 1, yPercent: 0, rotationX: 0,
+          color: (i) => i === stWords.length - 1 ? '#C8F135' : '#F0EDE6',
+          stagger: 0.12, duration: 0.5, ease: 'power2.out',
+        }, 0)
+        .fromTo('.statement-sub', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3 }, '-=0.2');
 
-    // === ABOUT — horizontal scroll (Change 02) ===
-    const isSmallMobile = window.innerWidth < 1024;
+      if (stDesktop) {
+        stTl
+          .to({}, { duration: 0.3 }) // hold
+          .to('.statement-portal', { scale: 4, duration: 1, stagger: 0.15, ease: 'power2.in' }, 'zoom')
+          .to('#statement h2', { scale: 9, opacity: 0, duration: 1, ease: 'power3.in', transformOrigin: '50% 60%' }, 'zoom')
+          .to('.statement-sub', { opacity: 0, y: -40, duration: 0.4 }, 'zoom')
+          .to('#statement .section-watermark', { scale: 3, opacity: 0, duration: 1 }, 'zoom');
+      }
+    }
 
-    const aboutTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: '#about',
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 1.5,
-        pin: !isSmallMobile, // Disable pinning on mobile for better scroll feel
-        pinSpacing: !isSmallMobile,
-      },
+    // === HERO — letters stretch toward the cursor ===
+    if (fine) {
+      const chars = Array.from(document.querySelectorAll('.hero-first .char, .hero-last .char'));
+      const setters = chars.map((c) => gsap.quickTo(c, 'scaleY', { duration: 0.6, ease: 'power3' }));
+      const heroEl2 = heroRef.current;
+      let raf2 = 0;
+      let centers = [];
+      let centersAt = 0;
+      heroEl2?.addEventListener('pointermove', (e) => {
+        if (raf2) return;
+        raf2 = requestAnimationFrame(() => {
+          raf2 = 0;
+          // measure at most ~4x/sec — reading 13 rects every frame forced style recalcs
+          const now = performance.now();
+          if (now - centersAt > 250) {
+            centers = chars.map((c) => { const r = c.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+            centersAt = now;
+          }
+          centers.forEach(([cx, cy], i) => {
+            const d = Math.hypot(e.clientX - cx, e.clientY - cy);
+            setters[i](1 + Math.max(0, 1 - d / 260) * 0.4);
+          });
+        });
+      });
+      heroEl2?.addEventListener('pointerleave', () => setters.forEach((set) => set(1)));
+    }
+
+    // === ABOUT — pinned story, one line at a time over a warp starfield ===
+    const storyLines = gsap.utils.toArray('.story-line');
+    const storyIdx = document.querySelector('.story-idx');
+    if (storyLines.length) {
+      if (window.innerWidth > 1024) {
+        const storyTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: '#about', start: 'top top', end: `+=${storyLines.length * 55}%`, pin: true, scrub: 0.8, anticipatePin: 1,
+            onUpdate: (self) => {
+              const n = Math.min(storyLines.length, Math.floor(self.progress * storyLines.length * 1.02) + 1);
+              const txt = String(n).padStart(2, '0');
+              if (storyIdx && storyIdx.textContent !== txt) storyIdx.textContent = txt;
+            },
+          },
+          defaults: { ease: 'power2.out' },
+        });
+        gsap.set(storyLines, { opacity: 0.06, y: 40 });
+        storyLines.forEach((line, i) => {
+          storyTl.to(line, { opacity: 1, y: 0, duration: 1 }, i);
+          if (i > 0) storyTl.to(storyLines[i - 1], { opacity: 0.22, duration: 1 }, i);
+        });
+        storyTl.to({}, { duration: 0.6 });
+      } else {
+        storyLines.forEach((line) => {
+          gsap.fromTo(line, { opacity: 0.08, y: 30 }, { opacity: 1, y: 0, scrollTrigger: { trigger: line, start: 'top 85%', end: 'top 55%', scrub: true } });
+        });
+      }
+    }
+
+    // === PROCESS — numbered steps light up as they cross the centre ===
+    gsap.utils.toArray('.process-item').forEach((item) => {
+      ScrollTrigger.create({ trigger: item, start: 'top 62%', end: 'bottom 38%', toggleClass: 'active' });
     });
-
-    aboutTl
-      .fromTo('.about-label', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.1 }, 0)
-      .to('.about-line-1', {
-        x: isSmallMobile ? '-20vw' : '-60vw',
-        ease: 'none'
-      }, 0)
-      .to('.about-line-2', {
-        x: isSmallMobile ? '20vw' : '60vw',
-        ease: 'none'
-      }, 0);
 
     // Watermark parallax
     gsap.utils.toArray('.section-watermark').forEach((el) => {
@@ -739,14 +817,14 @@ export default function App() {
       });
     });
 
-    // === EXPERIENCE — Change 5F clip wipe title + timeline ===
+    // === EXPERIENCE — title punch-in + timeline ===
     gsap.fromTo('.exp-title',
-      { clipPath: 'inset(0 100% 0 0)' },
+      { yPercent: 60, opacity: 0, skewY: 6 },
       {
-        clipPath: 'inset(0 0% 0 0)',
+        yPercent: 0, opacity: 1, skewY: 0,
         scrollTrigger: { trigger: '#experience', start: 'top 70%' },
-        duration: 0.8,
-        ease: 'power3.out',
+        duration: 1.2,
+        ease: 'expo.out',
       }
     );
 
@@ -762,65 +840,78 @@ export default function App() {
 
     document.querySelectorAll('.exp-card').forEach((card) => {
       gsap.fromTo(card,
-        { x: 60, opacity: 0 },
-        { x: 0, opacity: 1, scrollTrigger: { trigger: card, start: 'top 85%' }, duration: 0.7, ease: 'power2.out' }
+        { y: 80, opacity: 0, clipPath: 'inset(0 0 100% 0)' },
+        { y: 0, opacity: 1, clipPath: 'inset(0 0 0% 0)', scrollTrigger: { trigger: card, start: 'top 88%' }, duration: 1.2, ease: 'expo.out', clearProps: 'clipPath' }
       );
     });
 
-    // === PROJECTS — Cinematic Horizontal Story Layout ===
-
-
-    const projectScroll = window.innerWidth >= 1024 ? gsap.to(projectHorizontalRef.current, {
+    // === PROJECTS — Cinematic Horizontal Story (3D coverflow) ===
+    const desktop = window.innerWidth > 1024;
+    const projectScroll = desktop ? gsap.to(projectHorizontalRef.current, {
       x: () => -(projectHorizontalRef.current.scrollWidth - window.innerWidth),
       ease: 'none',
       scrollTrigger: {
         trigger: projectSectionRef.current,
         pin: true,
-        scrub: 0.5, // Faster, more tactile scrub
+        scrub: 1,
         start: 'top top',
-        end: () => `+=${projectHorizontalRef.current.scrollWidth * 0.8}`, // Reduced scroll distance for faster speed
+        end: () => `+=${projectHorizontalRef.current.scrollWidth * 0.9}`,
         anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const fill = document.querySelector('.project-hud-fill');
+          if (fill) fill.style.transform = `scaleX(${self.progress})`;
+          const n = Math.min(PROJECTS.length, Math.floor(self.progress * PROJECTS.length) + 1);
+          const cnt = document.querySelector('.project-hud-num');
+          if (cnt && cnt.textContent !== String(n).padStart(2, '0')) cnt.textContent = String(n).padStart(2, '0');
+        },
       }
     }) : null;
 
-    // Individual project card effects (parallax + highlight + entrance)
     document.querySelectorAll('.project-card-v2').forEach((card) => {
+      const frame = card.querySelector('.project-frame');
+      const img = card.querySelector('.project-frame-img');
       const content = card.querySelector('.project-content-v2');
 
-      // ONE TIMELINE TO RULE THEM ALL (Fixes scroll-up glitch + ensures perfect smoothness)
-      const cardTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: card,
-          containerAnimation: window.innerWidth >= 1024 ? projectScroll : null,
-          start: window.innerWidth < 1024 ? 'top 80%' : 'left right',
-          end: window.innerWidth < 1024 ? 'bottom 20%' : 'right left',
-          scrub: 1.5, // Buttery smooth feel
-        }
-      });
-
-      cardTl
-        .fromTo(card,
-          { opacity: 0.05, scale: 0.88, filter: 'blur(15px)' },
-          { opacity: 1, scale: 1, filter: 'blur(0px)', ease: 'power2.inOut' },
-          0
-        )
-        .to(card,
-          { opacity: 0.05, scale: 0.88, filter: 'blur(15px)', ease: 'power2.inOut' },
-          0.5 // Start fading out after the halfway point of the card's journey
-        );
-
-      // individual project card effects (parallax + highlight + entrance)
-      if (content) {
-        gsap.to(content, {
-          y: -30,
+      if (desktop) {
+        // Coverflow: cards swing in from the right, flatten in the centre, swing out to the left.
+        // Transform + opacity only → stays on the compositor (no blur filter).
+        gsap.timeline({
           scrollTrigger: {
             trigger: card,
             containerAnimation: projectScroll,
-            start: 'left center',
-            end: 'center center',
-            scrub: 1, // Added scrub for smoother transition
-          }
+            start: 'left right',
+            end: 'right left',
+            scrub: true,
+          },
+          defaults: { ease: 'none' },
+        })
+          .fromTo(card, { rotationY: -28, scale: 0.82, opacity: 0.25, z: -200 }, { rotationY: 0, scale: 1, opacity: 1, z: 0, ease: 'power2.out' }, 0)
+          .to(card, { rotationY: 28, scale: 0.82, opacity: 0.25, z: -200, ease: 'power2.in' }, 0.5);
+
+        if (img) {
+          gsap.fromTo(img, { xPercent: 6 }, {
+            xPercent: -6, ease: 'none',
+            scrollTrigger: { trigger: card, containerAnimation: projectScroll, start: 'left right', end: 'right left', scrub: true },
+          });
+        }
+        if (content) {
+          gsap.fromTo(content.children, { x: 120, opacity: 0 }, {
+            x: 0, opacity: 1, stagger: 0.06, ease: 'power3.out',
+            scrollTrigger: { trigger: card, containerAnimation: projectScroll, start: 'left 85%', end: 'left 35%', scrub: true },
+          });
+        }
+      } else {
+        gsap.fromTo(card, { y: 100, opacity: 0, scale: 0.94 }, {
+          y: 0, opacity: 1, scale: 1, duration: 1.2, ease: 'expo.out',
+          scrollTrigger: { trigger: card, start: 'top 85%' },
         });
+        if (frame) {
+          gsap.fromTo(frame, { clipPath: 'inset(100% 0 0 0 round 16px)' }, {
+            clipPath: 'inset(0% 0 0 0 round 16px)', duration: 1.4, ease: 'expo.inOut',
+            scrollTrigger: { trigger: card, start: 'top 80%' },
+          });
+        }
       }
     });
 
@@ -837,12 +928,12 @@ export default function App() {
 
     // === SKILLS — 4C Scale + Fade on skill pills + staggered category reveal + clip wipe title ===
     gsap.fromTo('.skills-title',
-      { clipPath: 'inset(0 100% 0 0)' },
+      { yPercent: 60, opacity: 0, skewY: 6 },
       {
-        clipPath: 'inset(0 0% 0 0)',
+        yPercent: 0, opacity: 1, skewY: 0,
         scrollTrigger: { trigger: '#skills', start: 'top 70%' },
-        duration: 0.8,
-        ease: 'power3.out',
+        duration: 1.2,
+        ease: 'expo.out',
       }
     );
 
@@ -890,34 +981,27 @@ export default function App() {
       });
     });
 
-    // === STATS — count up ===
-    document.querySelectorAll('.stat-counter').forEach((el) => {
-      const target = parseFloat(el.dataset.target);
-      const decimals = parseInt(el.dataset.decimals || '0');
-      const suffix = el.dataset.suffix || '';
-      const obj = { val: 0 };
-      gsap.to(obj, {
-        val: target,
-        duration: 2,
-        ease: 'power2.out',
-        scrollTrigger: { trigger: el, start: 'top 80%' },
-        onUpdate: () => {
-          el.textContent = (decimals > 0 ? obj.val.toFixed(decimals) : Math.floor(obj.val)) + suffix;
-        },
+    // === STATS — rolling odometers ===
+    initOdometers();
+
+    // === GRAND FINALE — screen grows out of the dark ===
+    gsap.fromTo('#grand-finale-screen',
+      { scale: 0.86, borderRadius: 120, yPercent: 8 },
+      {
+        scale: 1, borderRadius: 40, yPercent: 0, ease: 'none',
+        scrollTrigger: { trigger: '#grand-finale-outer', start: 'top bottom', end: 'top 15%', scrub: 1 },
       });
+    gsap.fromTo('.finale-watermark', { yPercent: -30, opacity: 0 }, {
+      yPercent: 30, opacity: 1, ease: 'none',
+      scrollTrigger: { trigger: '#grand-finale-outer', start: 'top bottom', end: 'bottom bottom', scrub: true },
+    });
+    gsap.fromTo('.mega-link', { yPercent: 110, opacity: 0 }, {
+      yPercent: 0, opacity: 1, duration: 1.1, ease: 'expo.out', stagger: 0.06,
+      scrollTrigger: { trigger: '#grand-finale-screen', start: 'top 55%' },
     });
 
-    // Contact animations removed (Missing elements)
-
-    // ─── Certification Hover Effects ──────────────────────────
-    document.querySelectorAll('.cert-card-v2').forEach(card => {
-      card.addEventListener('mouseenter', () => {
-        gsap.to(card, { y: -10, borderColor: 'rgba(200, 241, 53, 0.4)', duration: 0.3, ease: 'power2.out' });
-      });
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, { y: 0, borderColor: 'rgba(255,255,255,0.05)', duration: 0.3, ease: 'power2.out' });
-      });
-    });
+    // Attribute-driven reveals (data-split / data-reveal / data-parallax)
+    initReveals();
 
     ScrollTrigger.refresh();
 
@@ -945,192 +1029,105 @@ export default function App() {
       <div ref={appRef} className="app">
         {/* Custom Cursor */}
         <div className="cursor-dot" />
-        <div className="cursor-ring" />
+        <div className="cursor-ring"><span className="cursor-label" /></div>
 
-        {/* Page Flash (Change 5A) */}
-        <div ref={flashRef} className="page-flash" />
+        {/* Film grain + vignette */}
+        <div className="vignette" />
+
+        {/* Curtain page transition */}
+        <div ref={flashRef} className="page-curtain" aria-hidden="true">
+          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="page-curtain-col" />)}
+        </div>
+        <div className="page-curtain-label" aria-hidden="true" />
+
+        {/* Experience hover follow-image */}
+        <FollowImage src={hoverSnap} active={hoverActive} />
 
         {/* Preloader */}
         {!preloaderDone && (
           <div className="preloader">
-            <div className="preloader-top" />
-            <div className="preloader-bottom" />
-            <div className="preloader-monogram">RS</div>
-            <div className="preloader-bar" style={{ width: `${counter}%` }} />
-            <div className="preloader-counter">{String(counter).padStart(3, '0')}</div>
+            <div className="preloader-strips" aria-hidden="true">
+              {Array.from({ length: 12 }).map((_, i) => <div key={i} className="preloader-strip" />)}
+            </div>
+            <div className="preloader-meta preloader-tl font-mono"><span>RAKSHIT SHARMA</span><span>PORTFOLIO ©2026</span></div>
+            <div className="preloader-meta preloader-tr font-mono"><span>LOADING EXPERIENCE</span><span>HIMACHAL PRADESH, IN</span></div>
+            <div className="preloader-line"><div className="preloader-line-fill" /></div>
+            <div className="preloader-count-wrap"><div ref={counterRef} className="preloader-count font-display">000</div></div>
           </div>
         )}
 
         {/* Nav */}
         <nav className="nav-fixed">
-          <div
-            className="nav-monogram"
-            onClick={() => scrollToSection('hero')}
-            onMouseEnter={() => { }}
-            onMouseLeave={() => { }}
-          >
-            RS
+          <div className="nav-left">
+            <div
+              className="nav-monogram"
+              data-magnetic="0.5"
+              onClick={() => scrollToSection('hero')}
+            >
+              RS
+            </div>
+            <div className="nav-section-label">
+              <span key={activeSection} className="nav-label-anim">
+                {String(activeSection + 1).padStart(2, '0')} — {SECTION_LABELS[activeSection]}
+              </span>
+            </div>
           </div>
+          <div className="nav-right">
+            <span className="nav-clock font-mono"><LiveClock /></span>
+            <a href={`mailto:${PERSONAL.email}`} className="bracket-btn font-mono" data-magnetic="0.3">
+              <RollText text="LET'S TALK" />
+            </a>
           <div className="nav-dots">
             {SECTIONS.map((id, i) => (
               <div
                 key={id}
                 className={`nav-dot ${activeSection === i ? 'active' : ''}`}
+                title={SECTION_LABELS[i]}
                 onClick={() => scrollToSection(id)}
-                onMouseEnter={() => { }}
-                onMouseLeave={() => { }}
               />
             ))}
           </div>
+          </div>
         </nav>
 
-        {/* ═══════════ SCENE 01 — HERO ═══════════ */}
-        <section ref={heroRef} id="hero" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', padding: '120px 48px 48px' }}>
-          <div className="section-watermark" style={{ top: '10%', right: '-5%' }}>01</div>
+        {/* ═══════════ SCENE 01 — HERO (portrait layered inside the name) ═══════════ */}
+        <section ref={heroRef} id="hero" className="hero-v2">
+          <h1 className="sr-only">Rakshit Sharma — Frontend Developer</h1>
+          <div className="grid-lines" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, i) => <span key={i} />)}
+          </div>
 
-          {/* Corner LeetCode Grids (lightweight) */}
-          {CORNER_POSITIONS.map((pos, ci) => (
-            <div
-              key={ci}
-              ref={(el) => (cornerGridRefs.current[ci] = el)}
-              className="corner-grid-lite"
-              style={{
-                position: 'absolute',
-                ...pos,
-                width: 200, height: 128,
-                opacity: 0,
-                transition: 'opacity 0.4s ease',
-                pointerEvents: 'none',
-                zIndex: 1,
-                display: 'grid',
-                gridTemplateColumns: 'repeat(10, 1fr)',
-                gap: 2,
-                padding: 6,
-                WebkitMaskImage: CORNER_MASKS[ci],
-                maskImage: CORNER_MASKS[ci],
-              }}
-            >
-              {cornerBoxes[ci].map((color, j) => (
-                <div key={j} style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color, flexShrink: 0 }} />
-              ))}
-            </div>
-          ))}
+          <div className="hero-stage" aria-hidden="true">
+            <div className="hero-name-back hero-first font-display">{heroFirstChars}</div>
+            <img className="hero-portrait" src={face1} alt="" draggable="false" />
+            <div className="hero-name-front hero-last font-display">{heroLastChars}</div>
+          </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : '1fr 1fr',
-            gap: window.innerWidth < 768 ? '32px' : '48px',
-            width: '100%',
-            maxWidth: 1400,
-            margin: '0 auto',
-            alignItems: 'center',
-            position: 'relative',
-            zIndex: 2
-          }}>
-            {/* Left Side */}
-            <div style={{
-              textAlign: window.innerWidth < 1024 ? 'center' : 'left',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: window.innerWidth < 1024 ? 'center' : 'flex-start',
-              width: '100%'
-            }}>
-              <div className="hero-label font-mono" style={{
-                fontSize: window.innerWidth < 768 ? 10 : 12,
-                color: 'var(--accent)',
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                marginBottom: 24,
-                width: '100%'
-              }}>
-                Available for work · 2026
-              </div>
-              <h1 className="hero-first font-display" style={{
-                fontSize: 'clamp(48px, 15vw, 200px)',
-                lineHeight: 0.85,
-                color: 'var(--white)',
-                letterSpacing: '-0.01em',
-                display: 'flex',
-                justifyContent: window.innerWidth < 1024 ? 'center' : 'flex-start',
-                flexWrap: 'nowrap',
-                width: '100%'
-              }}>
-                {heroFirstChars}
-              </h1>
-              <h1 className="hero-last font-display" style={{
-                fontSize: 'clamp(48px, 15vw, 200px)',
-                lineHeight: 0.85,
-                color: 'var(--accent)',
-                letterSpacing: '-0.01em',
-                display: 'flex',
-                justifyContent: window.innerWidth < 1024 ? 'center' : 'flex-start',
-                flexWrap: 'nowrap',
-                width: '100%'
-              }}>
-                {heroLastChars}
-              </h1>
-              <div style={{
-                marginTop: 32,
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: window.innerWidth < 1024 ? 'center' : 'flex-start',
-              }}>
-                <p className="hero-sub font-body" style={{
-                  fontSize: 'clamp(14px, 1.4vw, 22px)',
-                  fontWeight: 700,
-                  color: 'rgba(240,237,230,0.7)'
-                }}>
-                  Frontend Developer
-                </p>
-                <p className="hero-sub font-mono" style={{
-                  fontSize: 10,
-                  color: 'var(--accent)',
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  marginTop: 8
-                }}>
-                  React · UI/UX · Full Stack
-                </p>
-              </div>
-            </div>
+          <div className="hero-label-wrap">
+            <span className="hero-label font-mono">Available for work · 2026</span>
+            <Scribble type="circle" className="hero-scribble-circle" trigger="#hero" delay={2.2} />
+            <Scribble type="arrow" className="hero-scribble-arrow" trigger="#hero" delay={2.6} />
+          </div>
 
+          <div className="hero-intro">
+            <p className="hero-sub font-mono hero-intro-kicker">// FRONTEND DEVELOPER — HIMACHAL, IN</p>
+            <p className="hero-sub font-body hero-intro-text">
+              I craft cinematic, high-performance web experiences with React, Node &amp; Java — from idea to deployment.
+            </p>
+          </div>
 
+          <div className="hero-stats">
+            {['300+ DSA Problems Solved', '3 Live Client Projects'].map((t, i) => (
+              <div key={i} className="hero-stat-pill font-mono" data-magnetic="0.25">{t}</div>
+            ))}
+          </div>
 
-            {/* Right Side */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: window.innerWidth < 1024 ? 'center' : 'flex-end',
-              gap: 16
-            }}>
-              {/* RS watermark */}
-              <div className="text-outline-accent font-body" style={{ fontSize: 'clamp(80px, 10vw, 160px)', fontWeight: 800, opacity: 0.1, letterSpacing: '0.1em' }}>
-                RS
-              </div>
-              {/* Stat pills — Change 03: removed TGPA */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
-                {[
-                  '300+ DSA Problems Solved',
-                  '3 Live Projects',
-                ].map((t, i) => (
-                  <div
-                    key={i}
-                    className="hero-stat-pill font-mono"
-                    style={{
-                      fontSize: 11,
-                      padding: '10px 20px',
-                      border: '1px solid var(--border)',
-                      color: 'var(--white)',
-                      letterSpacing: '0.1em',
-                      background: 'var(--dim)',
-                    }}
-                  >
-                    {t}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="hero-hang">
+            <HangingBadge href={`mailto:${PERSONAL.email}`} getVelocity={getScrollVelocity} links={vw < 768 ? 6 : 9}>
+              <SpinBadge size={vw < 768 ? 104 : 140} magnetic={false}>
+                <span className="font-display" style={{ fontSize: vw < 768 ? 18 : 22, letterSpacing: '0.05em' }}>HIRE</span>
+              </SpinBadge>
+            </HangingBadge>
           </div>
 
           {/* Bottom bar */}
@@ -1147,8 +1144,9 @@ export default function App() {
             >
               {PERSONAL.email}
             </a>
-            <div className="font-mono" style={{ fontSize: 10, color: 'var(--muted)', letterSpacing: '0.2em' }}>
-              ↓ SCROLL
+            <div className="hero-scroll-indicator font-mono" style={{ fontSize: 10, color: 'var(--muted)', letterSpacing: '0.3em' }}>
+              SCROLL
+              <span className="hero-scroll-line" />
             </div>
             <div style={{ display: 'flex', gap: 20 }}>
               {[
@@ -1175,14 +1173,19 @@ export default function App() {
         {/* ═══════════ SCENE 02 — STATEMENT ═══════════ */}
         < section
           id="statement"
+          data-cursor=""
           style={{
-            minHeight: '100vh', display: 'flex', flexDirection: 'column',
+            minHeight: '100vh', height: '100vh', display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', padding: '120px 48px',
             textAlign: 'center', position: 'relative',
           }
           }
         >
-          <div className="section-watermark" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>02</div>
+          <div className="section-watermark" style={{ top: '30%', left: '42%' }}>02</div>
+
+          <ImageTrail images={[aistylerSnap, netflixSnap, metafurySnap, dentalclinicSnap, algovizSnap, desitarzanSnap]} />
+          <div className="statement-portal" />
+          <div className="statement-portal p2" />
 
           {/* Subtle accent glow */}
           <div style={{
@@ -1191,7 +1194,7 @@ export default function App() {
             top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none',
           }} />
 
-          <h2 className="font-display" style={{ fontSize: 'clamp(50px, 8vw, 130px)', lineHeight: 1, maxWidth: 1000, position: 'relative', zIndex: 1 }}>
+          <h2 className="font-display" style={{ fontSize: 'clamp(50px, 8vw, 130px)', lineHeight: 1, maxWidth: 1000, position: 'relative', zIndex: 1, perspective: 800 }}>
             {statementWordsMarkup}
           </h2>
           <p className="statement-sub font-mono" style={{ fontSize: 13, color: 'var(--muted)', marginTop: 40, maxWidth: 500, letterSpacing: '0.05em', lineHeight: 1.7, position: 'relative', zIndex: 1 }}>
@@ -1199,42 +1202,30 @@ export default function App() {
           </p>
         </section >
 
-        {/* ═══════════ SCENE 03 — ABOUT (Change 02 — Horizontal Scroll) ═══════════ */}
-        <section id="about" style={{ minHeight: '150vh', position: 'relative' }}>
-          <div className="about-scroll-container">
-            <div className="section-watermark" style={{ top: '10%', left: '-5%' }}>03</div>
+        {/* ═══════════ MEGA MARQUEE BAND ═══════════ */}
+        <div className="mega-marquee" data-skew>
+          <VMarquee speed={1.4}>
+            {['CREATIVE DEVELOPER', 'MOTION', 'FULL STACK', 'PIXEL PERFECT'].map((t, i) => (
+              <span key={i} className={`mega-marquee-item ${i % 2 ? 'outline' : ''}`}>{t}<span className="star">✦</span></span>
+            ))}
+          </VMarquee>
+        </div>
 
-            {/* Label */}
-            <div className="about-label font-mono" style={{ fontSize: 12, color: 'var(--muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 48, position: 'relative', zIndex: 2 }}>
-            // ABOUT ME
+        {/* ═══════════ SCENE 03 — ABOUT (pinned story over a warp starfield) ═══════════ */}
+        <section id="about" className="story-section">
+          <Starfield getVelocity={getScrollVelocity} />
+          <div className="story-inner">
+            <div className="story-meta font-mono">
+              <span>// ABOUT ME — THE SHORT VERSION</span>
+              <span className="story-count"><b className="story-idx">01</b> / {String(STORY_LINES.length).padStart(2, '0')}</span>
             </div>
-
-            {/* Line 1 — moves LEFT */}
-            <div className="about-line about-line-1" style={{ color: 'var(--white)', position: 'relative', zIndex: 2 }}>
-              I craft full-stack experiences — MERN is my weapon, Java is my logic, and clean UI is my obsession.
-            </div>
-
-            {/* Separator */}
-            <div style={{ width: '60%', maxWidth: 500, height: 1, background: 'var(--border)', margin: '24px 0', position: 'relative', zIndex: 2 }} />
-
-            {/* Line 2 — moves RIGHT */}
-            <div className="about-line about-line-2 text-outline-accent" style={{ position: 'relative', zIndex: 2 }}>
-              3 live client projects shipped. 300+ DSA problems solved. Ranked #1 at university. Always building.
-            </div>
-
-            {/* Moved Marquee inside pinned container for always-on visibility */}
-            <div style={{ position: 'absolute', bottom: '10vh', left: 0, width: '100%', zIndex: 1 }}>
-              {/* Track 1 — LEFT */}
-              <div className="marquee-wrapper" style={{ background: 'transparent', padding: '14px 0', opacity: 0.3 }}>
-                <div className="marquee-track marquee-track-left">
-                  {[0, 1, 2, 3].map(k => (
-                    <span key={k} className="font-display" style={{ fontSize: 24, color: 'var(--accent)', whiteSpace: 'nowrap', paddingRight: 60 }}>{marqueeText}</span>
-                  ))}
-                </div>
-              </div>
+            <div className="story-lines">
+              {STORY_LINES.map((l, i) => (
+                <p key={i} className={`story-line font-body ${i === STORY_LINES.length - 1 ? 'last' : ''}`}>{l}</p>
+              ))}
             </div>
           </div>
-        </section >
+        </section>
 
         {/* ═══════════ SCENE 04 — EXPERIENCE ═══════════ */}
         < section id="experience" style={{ padding: '160px 48px', background: 'var(--dim)', position: 'relative' }}>
@@ -1256,8 +1247,10 @@ export default function App() {
                 <div
                   key={i}
                   className="exp-card"
-                  onMouseEnter={() => { }}
-                  onMouseLeave={() => { }}
+                  data-cursor="VISIT"
+                  onMouseEnter={() => { setHoverSnap(exp.snap); setHoverActive(true); }}
+                  onMouseLeave={() => setHoverActive(false)}
+                  onClick={(e) => { if (!e.target.closest('a')) window.open(exp.url, '_blank', 'noopener'); }}
                   style={{ position: 'relative' }}
                 >
                   <div className="font-display text-outline" style={{ fontSize: 48, lineHeight: 1 }}>{exp.num}</div>
@@ -1280,24 +1273,49 @@ export default function App() {
                     href={exp.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover-line font-mono"
+                    className="font-mono"
                     style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', alignSelf: 'center', letterSpacing: '0.1em' }}
-                    onMouseEnter={() => { }}
-                    onMouseLeave={() => { }}
                   >
-                    VIEW LIVE →
+                    <RollText text="VIEW LIVE →" />
                   </a>
-                  {/* Website snap preview on hover */}
-                  {exp.snap && (
-                    <div className="exp-snap-preview">
-                      <img src={exp.snap} alt={exp.company} />
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           </div>
         </section >
+
+        {/* ═══════════ SCENE 04B — PROCESS (sticky title + numbered steps) ═══════════ */}
+        <section id="process" className="process-section">
+          <div className="process-grid">
+            <div className="process-left">
+              <span className="font-mono process-kicker">// HOW I WORK</span>
+              <h2 className="font-display process-title">
+                <SplitReveal text="FROM IDEA" /><br />
+                <span className="process-title-accent">
+                  <SplitReveal text="TO LIVE" charStyle={{ color: 'var(--accent)' }} />
+                  <Scribble type="underline" className="process-scribble" width={4} />
+                </span>
+              </h2>
+              <p className="font-body process-desc" data-reveal="up">
+                I handle the whole journey — strategy, design, build and launch — so you get one partner, one vision and zero hand-off gaps.
+              </p>
+              <a href={`mailto:${PERSONAL.email}`} className="bracket-btn bracket-btn-lg font-mono" data-magnetic="0.3">
+                <RollText text="START A PROJECT" />
+              </a>
+            </div>
+            <div className="process-list">
+              {PROCESS.map((p) => (
+                <div key={p.num} className="process-item">
+                  <span className="process-num font-mono">({p.num})</span>
+                  <div>
+                    <h3 className="font-display process-item-title">{p.title}</h3>
+                    <p className="font-body process-item-desc">{p.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* ═══════════ SCENE 05 — PROJECTS (HORIZONTAL STORY) ═══════════ */}
         < section ref={projectSectionRef} id="projects" style={{ background: 'var(--black)', overflow: 'hidden', position: 'relative', zIndex: 20 }}>
@@ -1305,51 +1323,28 @@ export default function App() {
 
           <div className="project-sticky-header" style={{ position: 'absolute', top: '8vh', left: '48px', zIndex: 10 }}>
             <h2 className="font-display" style={{ fontSize: 'clamp(40px, 6vw, 80px)', color: 'var(--white)' }}>
-              MY <span style={{ color: 'var(--accent)' }}>PROJECTS</span>
+              <SplitReveal text="MY" /> <SplitReveal text="PROJECTS" charStyle={{ color: 'var(--accent)' }} />
             </h2>
             <p className="font-mono" style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8, letterSpacing: '0.2em' }}>
             // SLIDE TO DISCOVER THE STORY
             </p>
           </div>
 
-          <div ref={projectHorizontalRef} className="project-horizontal-container">
-            {PROJECTS.map((p, i) => (
-              <div key={i} className="project-card-v2"
-                onMouseMove={(e) => {
-                  const el = e.currentTarget;
-                  const { clientX, clientY } = e;
-                  if (el._raf) return;
-                  el._raf = requestAnimationFrame(() => {
-                    const rect = el.getBoundingClientRect();
-                    const x = ((clientX - rect.left) / rect.width) * 100;
-                    const y = ((clientY - rect.top) / rect.height) * 100;
-                    el.style.setProperty('--torch-x-bg', `${x}%`);
-                    el.style.setProperty('--torch-y-bg', `${y}%`);
-                    el._raf = null;
-                  });
-                }}
-              >
-                {/* Background Torch */}
-                <div className="project-torch-bg">
-                  <img
-                    src={p.snap || (i % 2 === 0 ? metafurySnap : desitarzanSnap)}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(30px) brightness(0.2)', opacity: 0.35 }}
-                  />
-                </div>
+          <div className="project-hud">
+            <span className="project-hud-count"><b className="project-hud-num">01</b> / {String(PROJECTS.length).padStart(2, '0')}</span>
+            <div className="project-hud-track"><div className="project-hud-fill" /></div>
+            <span>SCROLL →</span>
+          </div>
 
-                {/* Torch Reveal */}
-                <div className="project-torch-reveal">
-                  <img
-                    src={p.snap || (i % 2 === 0 ? metafurySnap : desitarzanSnap)}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(10px) brightness(0.75)' }}
-                  />
-                </div>
+          <div ref={projectHorizontalRef} className="project-horizontal-container" style={{ perspective: 1600 }}>
+            {PROJECTS.map((p, i) => (
+              <div key={i} className="project-card-v2 project-card-v3" style={{ '--pc': p.color }}>
+                <div className="project-glow" />
 
                 {/* Content Side */}
                 <div className="project-content-v2">
-                  <div className="project-date">— {p.when}</div>
+                  <div className="project-num-big">{p.num}</div>
+                  <div className="project-date">— {p.when} · {p.sub.toUpperCase()}</div>
                   <h3 className="project-title font-display">{p.title}</h3>
                   <p className="project-description font-body">
                     {p.sub}. A cinematic full-stack solution optimized for modern web performance.
@@ -1362,18 +1357,24 @@ export default function App() {
                   </div>
 
                   <div className="project-actions">
-                    <a href={p.url} className="magnetic-btn project-btn">
+                    <a href={p.url} target="_blank" rel="noreferrer" className="magnetic-btn project-btn" data-magnetic="0.3">
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        View Live <ExternalLink size={16} />
+                        <RollText text="View Live" /> <ExternalLink size={16} />
                       </span>
                     </a>
-                    <a href={PERSONAL.github} className="magnetic-btn project-btn-alt">
+                    <a href={PERSONAL.github} target="_blank" rel="noreferrer" className="magnetic-btn project-btn-alt" data-magnetic="0.3">
                       <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Github size={18} /> Source
+                        <Github size={18} /> <RollText text="Source" />
                       </span>
                     </a>
                   </div>
                 </div>
+
+                {/* Browser frame mockup with inner parallax + glare */}
+                <a href={p.url} target="_blank" rel="noreferrer" className="project-frame" data-tilt="6" data-cursor="OPEN ↗">
+                  <div className="project-frame-bar"><i /><i /><i /></div>
+                  <img className="project-frame-img" src={p.snap} alt={p.title} loading="lazy" />
+                </a>
               </div>
             ))}
 
@@ -1387,13 +1388,23 @@ export default function App() {
         {/* ═══════════ GALLERY — Horizontal Parallax (Effect 03) ═══════════ */}
         < GallerySection />
 
+        <div style={{ overflow: 'hidden', background: 'var(--dim)', padding: '2vh 0' }}>
+          <div className="tilted-band" data-skew>
+            <VMarquee speed={1.2} dir="right">
+              {['OPEN TO WORK', "LET'S BUILD", 'REACT', 'NODE', 'JAVA', 'GSAP'].map((t, i) => (
+                <span key={i} className="mega-marquee-item">{t}<span className="star">✦</span></span>
+              ))}
+            </VMarquee>
+          </div>
+        </div>
+
         {/* ═══════════ SCENE 06 — SKILLS + ACHIEVEMENTS ═══════════ */}
         < section id="skills" style={{ padding: '160px 48px', background: 'var(--dim)', position: 'relative' }}>
           <div className="section-watermark" style={{ top: '10%', right: '0' }}>06</div>
 
           <div style={{ maxWidth: 1400, margin: '0 auto' }}>
             {/* Change 5F — clip wipe title */}
-            <h2 className="skills-title clip-wipe-title font-display" data-scramble="SKILLS & STATS" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
+            <h2 className="skills-title clip-wipe-title font-display" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
               SKILLS & <span style={{ color: 'var(--accent)' }}>STATS</span>
             </h2>
 
@@ -1419,6 +1430,7 @@ export default function App() {
                         <div
                           key={j}
                           className="skill-pill"
+                          data-magnetic="0.4"
                         >
                           {s}
                         </div>
@@ -1433,13 +1445,8 @@ export default function App() {
                 <div className="stats-grid">
                   {STATS.map((s, i) => (
                     <div key={i} className="stat-item">
-                      <div
-                        className="stat-counter stat-number"
-                        data-target={s.value}
-                        data-suffix={s.suffix}
-                        data-decimals={s.decimals || 0}
-                      >
-                        0{s.suffix}
+                      <div className="stat-number">
+                        <Odometer value={s.value} suffix={s.suffix} />
                       </div>
                       <div className="stat-label">{s.label}</div>
                     </div>
@@ -1458,21 +1465,22 @@ export default function App() {
             <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.3em', color: 'var(--accent)', textTransform: 'uppercase' }}>
               03 / COMPETITIVE ARENA
             </span>
-            <h2 className="font-display" style={{ fontSize: 'clamp(60px, 10vw, 140px)', color: '#fff', lineHeight: 0.8, marginTop: 20, marginBottom: 100 }}>
-              CODING<br />
-              <span className="text-outline-accent">PROFILES</span>
+            <h2 className="font-display" style={{ fontSize: 'clamp(60px, 10vw, 140px)', color: '#fff', lineHeight: 0.85, marginTop: 20, marginBottom: 100 }}>
+              <SplitReveal text="CODING" /><br />
+              <span className="text-outline-accent"><SplitReveal text="PROFILES" /></span>
             </h2>
 
-            <div style={{
+            <div data-reveal="stagger" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: '32px',
               maxWidth: '1200px',
               margin: '0 auto',
-              padding: '0 20px'
+              padding: '0 20px',
+              perspective: 1200
             }}>
               {CODING_PROFILES.map((profile, i) => (
-                <CodingFlipCard key={i} {...profile} url={profile.url} />
+                <div key={i} className="tilt-wrap"><CodingFlipCard {...profile} url={profile.url} /></div>
               ))}
             </div>
           </div>
@@ -1484,20 +1492,21 @@ export default function App() {
             <span className="font-mono" style={{ fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
               PROFESSIONAL CERTIFICATIONS
             </span>
-            <h2 className="font-display" style={{ fontSize: 'clamp(32px, 5vw, 64px)', color: '#fff', marginTop: 12, textTransform: 'uppercase' }}>
-              MY CERTIFICATIONS
+            <h2 className="font-display" style={{ fontSize: 'clamp(40px, 7vw, 100px)', color: '#fff', marginTop: 12, textTransform: 'uppercase', lineHeight: 0.9 }}>
+              <SplitReveal text="MY CERTIFICATIONS" />
             </h2>
           </div>
 
-          <div style={{
+          <div data-reveal="stagger" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))',
             gap: '24px',
             maxWidth: '1400px',
-            margin: '0 auto'
+            margin: '0 auto',
+            perspective: 1400
           }}>
             {CERTS_DATA.map((cert, i) => (
-              <a key={i} href={cert.pdf} download target="_blank" rel="noopener noreferrer" className="cert-card-premium" style={{
+              <a key={i} href={cert.pdf} download target="_blank" rel="noopener noreferrer" className="cert-card-premium" data-spotlight data-tilt="5" data-cursor="OPEN PDF" style={{ '--spot': cert.color,
                 position: 'relative',
                 display: 'block',
                 textDecoration: 'none',
@@ -1506,7 +1515,6 @@ export default function App() {
                 padding: '40px',
                 border: '1px solid rgba(255,255,255,0.03)',
                 overflow: 'hidden',
-                transition: 'transform 0.4s ease, border-color 0.4s ease',
                 cursor: 'none'
               }}>
                 {/* Vertical Accent Line */}
@@ -1564,7 +1572,7 @@ export default function App() {
 
                 {/* Footer: ID + Verified Badge */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-                  <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,b,255,0.2)', letterSpacing: '0.1em' }}>
+                  <span className="font-mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
                     {cert.credentialId}
                   </span>
 
@@ -1574,7 +1582,7 @@ export default function App() {
                     gap: 8,
                     padding: '6px 14px',
                     borderRadius: '100px',
-                    border: '1px solid rgba(255,b,255,0.1)',
+                    border: '1px solid rgba(255,255,255,0.1)',
                     background: 'rgba(255,255,255,0.02)'
                   }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: cert.color }} />
@@ -1591,9 +1599,10 @@ export default function App() {
               target="_blank"
               rel="noreferrer"
               className="magnetic-btn"
+              data-magnetic="0.4"
               style={{ pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 12, padding: '16px 32px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 100, color: '#fff', textDecoration: 'none' }}
             >
-              <span className="font-mono" style={{ fontSize: 11 }}>VIEW ALL CREDENTIALS</span>
+              <span className="font-mono" style={{ fontSize: 11 }}><RollText text="VIEW ALL CREDENTIALS" /></span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                 <polyline points="15 3 21 3 21 9" />
@@ -1634,7 +1643,7 @@ export default function App() {
 
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
                 <span className="font-mono" style={{ color: 'var(--black)', opacity: 0.4, fontSize: 9, letterSpacing: '0.2em' }}>FULL STACK DEVELOPER</span>
-                <a href={resumeFile} download="Rakshit_Sharma_Resume.pdf" className="resume-btn font-mono" style={{
+                <a href={resumeFile} download="Rakshit_Sharma_Resume.png" className="resume-btn font-mono" data-magnetic="0.35" style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '12px 24px',
                   background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)',
                   borderRadius: '100px', color: 'var(--black)', textDecoration: 'none', fontSize: 10, fontWeight: 700
@@ -1648,16 +1657,16 @@ export default function App() {
             <div style={{
               flex: 1,
               display: 'grid',
-              gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : '1.2fr 1.6fr 1.2fr',
-              gap: window.innerWidth < 1024 ? '40px' : '0',
+              gridTemplateColumns: vw < 1024 ? '1fr' : '1.2fr 1.6fr 1.2fr',
+              gap: vw < 1024 ? '40px' : '0',
               alignItems: 'center',
               position: 'relative',
               marginTop: 20
             }}>
 
               {/* Role Watermark */}
-              <div className="font-display" style={{
-                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              <div className="font-display finale-watermark" style={{
+                position: 'absolute', top: '25%', left: 0, right: 0,
                 fontSize: '14vw', color: 'var(--black)', opacity: 0.05, pointerEvents: 'none', fontWeight: 900,
                 textAlign: 'center', lineHeight: 0.8, zIndex: 0
               }}>
@@ -1665,12 +1674,12 @@ export default function App() {
               </div>
 
               {/* Menu Links */}
-              <div style={{ zIndex: 5, textAlign: window.innerWidth < 1024 ? 'center' : 'left' }}>
+              <div style={{ zIndex: 5, textAlign: vw < 1024 ? 'center' : 'left' }}>
                 <span className="font-mono" style={{ color: 'var(--black)', opacity: 0.3, fontSize: 9, letterSpacing: '0.4em' }}>LINKS / MENU</span>
                 <ul style={{ listStyle: 'none', padding: 0, marginTop: 30 }}>
                   {['HOME', 'ABOUT', 'SKILLS', 'PROJECTS'].map((item, i) => (
                     <li key={i} style={{ marginBottom: 8 }}>
-                      <a href={`#${item.toLowerCase()}`} className="font-display mega-link" style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', fontWeight: 800 }}>{item}</a>
+                      <a href={`#${item === 'HOME' ? 'hero' : item.toLowerCase()}`} onClick={(e) => { e.preventDefault(); scrollToSection(item === 'HOME' ? 'hero' : item.toLowerCase()); }} className="font-display mega-link" style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', fontWeight: 800 }}><RollText text={item} /></a>
                     </li>
                   ))}
                 </ul>
@@ -1684,7 +1693,7 @@ export default function App() {
               </div>
 
               {/* Social Links */}
-              <div style={{ textAlign: window.innerWidth < 1024 ? 'center' : 'right', zIndex: 5 }}>
+              <div style={{ textAlign: vw < 1024 ? 'center' : 'right', zIndex: 5 }}>
                 <span className="font-mono" style={{ color: 'var(--black)', opacity: 0.3, fontSize: 9, letterSpacing: '0.4em' }}>CONNECT / SOCIAL</span>
                 <ul style={{ listStyle: 'none', padding: 0, marginTop: 30 }}>
                   {[
@@ -1694,7 +1703,7 @@ export default function App() {
                     { label: 'INSTAGRAM', url: 'https://www.instagram.com/raxhitzz?igsh=MXQyNnhnYmFzMHQybg==' },
                   ].map((item, i) => (
                     <li key={i} style={{ marginBottom: 8 }}>
-                      <a href={item.url} target="_blank" rel="noreferrer" className="font-display mega-link" style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', fontWeight: 800 }}>{item.label}</a>
+                      <a href={item.url} target="_blank" rel="noreferrer" className="font-display mega-link" style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', fontWeight: 800 }}><RollText text={item.label} /></a>
                     </li>
                   ))}
                 </ul>
@@ -1706,12 +1715,12 @@ export default function App() {
           <div style={{
             padding: '24px 20px 0',
             display: 'grid',
-            gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1.2fr 2fr 1.2fr',
+            gridTemplateColumns: vw < 768 ? '1fr' : '1.2fr 2fr 1.2fr',
             gap: '20px',
             alignItems: 'center'
           }}>
 
-            <div className="font-mono" style={{ fontSize: 9, color: 'var(--white)', opacity: 0.4, textAlign: window.innerWidth < 768 ? 'center' : 'left' }}>
+            <div className="font-mono" style={{ fontSize: 9, color: 'var(--white)', opacity: 0.4, textAlign: vw < 768 ? 'center' : 'left' }}>
               © {new Date().getFullYear()} RAKSHIT SHARMA. BUILDING FOR THE FUTURE. <br />
               HIMACHAL PRADESH / <FooterClock />
             </div>
@@ -1737,7 +1746,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="font-mono" style={{ textAlign: window.innerWidth < 768 ? 'center' : 'right', display: 'flex', justifyContent: window.innerWidth < 768 ? 'center' : 'flex-end', gap: 30, fontSize: 9, color: 'var(--white)', opacity: 0.4 }}>
+            <div className="font-mono" style={{ textAlign: vw < 768 ? 'center' : 'right', display: 'flex', justifyContent: vw < 768 ? 'center' : 'flex-end', gap: 30, fontSize: 9, color: 'var(--white)', opacity: 0.4 }}>
               <span>MADE IN INDIA</span>
             </div>
           </div>
@@ -1747,7 +1756,9 @@ export default function App() {
         {/* Scroll to Top Button */}
         <button
           className={`scroll-to-top ${showScrollTop ? 'visible' : ''}`}
-          onClick={() => lenisRef.current?.scrollTo('#hero', { duration: 2 })}
+          data-magnetic="0.5"
+          aria-label="Back to top"
+          onClick={() => lenisRef.current?.scrollTo(0, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 4) })}
         >
           <Zap size={20} fill="currentColor" />
         </button>
