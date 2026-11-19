@@ -60,7 +60,7 @@ export function VMarquee({ children, speed = 1, dir = 'left', className = '', st
 }
 
 /* Rotating circular text badge */
-export function SpinBadge({ text = 'AVAILABLE FOR WORK • 2026 • ', size = 140, magnetic = true, children }) {
+export function SpinBadge({ text = 'SOFTWARE DEVELOPER • MACBEASE • ', size = 140, magnetic = true, children }) {
   const id = useMemo(() => `badge-${Math.random().toString(36).slice(2, 8)}`, []);
   return (
     <div className="spin-badge" style={{ width: size, height: size }} data-magnetic={magnetic ? '0.3' : undefined} data-cursor={magnetic ? 'HIRE' : undefined}>
@@ -69,7 +69,8 @@ export function SpinBadge({ text = 'AVAILABLE FOR WORK • 2026 • ', size = 14
           <path id={id} d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
         </defs>
         <text className="spin-badge-text">
-          <textPath href={`#${id}`}>{text.repeat(2)}</textPath>
+          {/* 2πr of the r=78 circle ≈ 490 — stretch the text to wrap exactly once */}
+          <textPath href={`#${id}`} textLength="486" lengthAdjust="spacing">{text}</textPath>
         </text>
       </svg>
       <div className="spin-badge-core">{children}</div>

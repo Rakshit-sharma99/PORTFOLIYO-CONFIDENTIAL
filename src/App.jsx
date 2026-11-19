@@ -33,7 +33,9 @@ gsap.registerPlugin(ScrollTrigger);
 // ─── Data ────────────────────────────────────────
 const PERSONAL = {
   name: 'Rakshit Sharma',
-  role: 'Frontend Developer',
+  role: 'Software Developer',
+  company: 'Macbease',
+  companyUrl: 'https://macbease.com',
   email: 'rakshitsharmalpu@gmail.com',
   phone: '+91-7018672992',
   github: 'https://github.com/Rakshit-sharma99',
@@ -45,6 +47,17 @@ const PERSONAL = {
 const EXPERIENCE = [
   {
     num: '01',
+    company: 'Macbease',
+    subtitle: 'Current Role',
+    role: 'Software Developer',
+    when: 'Present',
+    stack: [],
+    impact: '',
+    url: 'https://macbease.com',
+    current: true,
+  },
+  {
+    num: '02',
     company: 'Meta Fury',
     subtitle: 'Energy Drink Brand Website',
     role: 'Web Developer',
@@ -55,7 +68,7 @@ const EXPERIENCE = [
     snap: metafurySnap,
   },
   {
-    num: '02',
+    num: '03',
     company: 'Dental Clinic',
     subtitle: 'Appointment Booking Platform',
     role: 'Web Developer',
@@ -66,7 +79,7 @@ const EXPERIENCE = [
     snap: dentalclinicSnap,
   },
   {
-    num: '03',
+    num: '04',
     company: 'Desi Tarzan Store',
     subtitle: 'E-Commerce Platform',
     role: 'Web Developer',
@@ -116,6 +129,7 @@ const SECTIONS = ['hero', 'statement', 'about', 'experience', 'process', 'projec
 const SECTION_LABELS = ['INTRO', 'MANIFESTO', 'ABOUT', 'CLIENT WORK', 'PROCESS', 'PROJECTS', 'STACK', 'SKILLS', 'ARENA', 'CREDENTIALS'];
 
 const STORY_LINES = [
+  'Software Developer at Macbease.',
   'I craft full-stack experiences.',
   'MERN is my weapon.',
   'Java is my logic.',
@@ -1050,7 +1064,7 @@ export default function App() {
               {Array.from({ length: 12 }).map((_, i) => <div key={i} className="preloader-strip" />)}
             </div>
             <div className="preloader-meta preloader-tl font-mono"><span>RAKSHIT SHARMA</span><span>PORTFOLIO ©2026</span></div>
-            <div className="preloader-meta preloader-tr font-mono"><span>LOADING EXPERIENCE</span><span>HIMACHAL PRADESH, IN</span></div>
+            <div className="preloader-meta preloader-tr font-mono"><span>SOFTWARE DEVELOPER @ MACBEASE</span><span>HIMACHAL PRADESH, IN</span></div>
             <div className="preloader-line"><div className="preloader-line-fill" /></div>
             <div className="preloader-count-wrap"><div ref={counterRef} className="preloader-count font-display">000</div></div>
           </div>
@@ -1092,25 +1106,25 @@ export default function App() {
 
         {/* ═══════════ SCENE 01 — HERO (portrait layered inside the name) ═══════════ */}
         <section ref={heroRef} id="hero" className="hero-v2">
-          <h1 className="sr-only">Rakshit Sharma — Frontend Developer</h1>
+          <h1 className="sr-only">Rakshit Sharma — Software Developer at Macbease</h1>
           <div className="grid-lines" aria-hidden="true">
             {Array.from({ length: 6 }).map((_, i) => <span key={i} />)}
           </div>
 
           <div className="hero-stage" aria-hidden="true">
             <div className="hero-name-back hero-first font-display">{heroFirstChars}</div>
-            <img className="hero-portrait" src={face1} alt="" draggable="false" />
+            <img className="hero-portrait" src={face1} alt="Rakshit Sharma, Software Developer at Macbease" draggable="false" />
             <div className="hero-name-front hero-last font-display">{heroLastChars}</div>
           </div>
 
           <div className="hero-label-wrap">
-            <span className="hero-label font-mono">Available for work · 2026</span>
+            <span className="hero-label font-mono">Software Developer @ Macbease</span>
             <Scribble type="circle" className="hero-scribble-circle" trigger="#hero" delay={2.2} />
             <Scribble type="arrow" className="hero-scribble-arrow" trigger="#hero" delay={2.6} />
           </div>
 
           <div className="hero-intro">
-            <p className="hero-sub font-mono hero-intro-kicker">// FRONTEND DEVELOPER — HIMACHAL, IN</p>
+            <p className="hero-sub font-mono hero-intro-kicker">// CURRENTLY AT MACBEASE — HIMACHAL, IN</p>
             <p className="hero-sub font-body hero-intro-text">
               I craft cinematic, high-performance web experiences with React, Node &amp; Java — from idea to deployment.
             </p>
@@ -1233,8 +1247,8 @@ export default function App() {
 
           <div style={{ maxWidth: 1200, margin: '0 auto' }}>
             {/* Change 5F — clip wipe title */}
-            <h2 className="exp-title clip-wipe-title font-display" data-scramble="RECENT PAID PROJECTS" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
-              RECENT PAID PROJECTS
+            <h2 className="exp-title clip-wipe-title font-display" data-scramble="EXPERIENCE & CLIENT WORK" style={{ fontSize: 'clamp(60px, 8vw, 120px)', marginBottom: 80 }}>
+              EXPERIENCE &amp; CLIENT WORK
             </h2>
 
             <div style={{ position: 'relative', paddingLeft: 40 }}>
@@ -1248,7 +1262,7 @@ export default function App() {
                   key={i}
                   className="exp-card"
                   data-cursor="VISIT"
-                  onMouseEnter={() => { setHoverSnap(exp.snap); setHoverActive(true); }}
+                  onMouseEnter={() => { if (exp.snap) { setHoverSnap(exp.snap); setHoverActive(true); } }}
                   onMouseLeave={() => setHoverActive(false)}
                   onClick={(e) => { if (!e.target.closest('a')) window.open(exp.url, '_blank', 'noopener'); }}
                   style={{ position: 'relative' }}
@@ -1257,17 +1271,20 @@ export default function App() {
                   <div>
                     <h3 className="font-display" style={{ fontSize: 'clamp(28px, 4vw, 52px)', color: 'var(--white)', lineHeight: 1 }}>
                       {exp.company}
+                      {exp.current && <span className="now-badge font-mono"><i />NOW</span>}
                     </h3>
                     <p className="font-body" style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>{exp.subtitle}</p>
                     <p className="font-mono" style={{ fontSize: 11, color: 'var(--accent)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 12 }}>
                       {exp.role} · {exp.when}
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                      {exp.stack.map((s, j) => (
-                        <span key={j} className="font-mono" style={{ fontSize: 10, padding: '4px 10px', border: '1px solid var(--border)', color: 'var(--white)' }}>{s}</span>
-                      ))}
-                    </div>
-                    <p className="font-mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>{exp.impact}</p>
+                    {exp.stack.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                        {exp.stack.map((s, j) => (
+                          <span key={j} className="font-mono" style={{ fontSize: 10, padding: '4px 10px', border: '1px solid var(--border)', color: 'var(--white)' }}>{s}</span>
+                        ))}
+                      </div>
+                    )}
+                    {exp.impact && <p className="font-mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>{exp.impact}</p>}
                   </div>
                   <a
                     href={exp.url}
@@ -1276,7 +1293,7 @@ export default function App() {
                     className="font-mono"
                     style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', alignSelf: 'center', letterSpacing: '0.1em' }}
                   >
-                    <RollText text="VIEW LIVE →" />
+                    <RollText text={exp.current ? 'VISIT SITE →' : 'VIEW LIVE →'} />
                   </a>
                 </div>
               ))}
@@ -1642,7 +1659,7 @@ export default function App() {
               </div>
 
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
-                <span className="font-mono" style={{ color: 'var(--black)', opacity: 0.4, fontSize: 9, letterSpacing: '0.2em' }}>FULL STACK DEVELOPER</span>
+                <span className="font-mono" style={{ color: 'var(--black)', opacity: 0.4, fontSize: 9, letterSpacing: '0.2em' }}>SOFTWARE DEVELOPER @ MACBEASE</span>
                 <a href={resumeFile} download="Rakshit_Sharma_Resume.png" className="resume-btn font-mono" data-magnetic="0.35" style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '12px 24px',
                   background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)',

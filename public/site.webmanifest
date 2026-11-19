@@ -1,0 +1,13 @@
+{
+  "name": "Rakshit Sharma — Software Developer",
+  "short_name": "Rakshit Sharma",
+  "description": "Portfolio of Rakshit Sharma, Software Developer at Macbease and full stack developer.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
